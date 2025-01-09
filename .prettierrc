@@ -11,5 +11,5 @@
    "plugins": ["@trivago/prettier-plugin-sort-imports"],
    "importOrderSortSpecifiers": true,
    "importOrderParserPlugins": ["typescript", "classProperties", "decorators-legacy"],
-   "importOrder": ["^@nestjs/(.*)$", "<THIRD_PARTY_MODULES>", "^([.]{1,2}/)+(.*)$"]
+   "importOrder": ["^@nestjs/(.*)$", "<THIRD_PARTY_MODULES>", "^@(.*)/(.*)$", "^#(.*)/(.*)$", "^([.]{1,2}/)+(.*)$"]
 }
