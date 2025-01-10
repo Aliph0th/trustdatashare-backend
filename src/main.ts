@@ -15,7 +15,7 @@ async function bootstrap() {
    app.setGlobalPrefix('api');
    app.enableVersioning({ type: VersioningType.URI, defaultVersion: configService.getOrThrow('ACTUAL_VERSION') });
    app.enableCors({ credentials: true, origin: configService.getOrThrow('ALLOWED_ORIGIN') });
-   app.useGlobalPipes(new ValidationPipe({ transform: true }));
+   app.useGlobalPipes(new ValidationPipe({ transform: true, stopAtFirstError: true }));
 
    app.use(cookieParser(configService.getOrThrow('COOKIE_SECRET')));
    app.use(session(getSessionConfig(configService, app.get(RedisService))));
