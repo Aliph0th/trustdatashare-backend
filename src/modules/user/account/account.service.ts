@@ -30,4 +30,16 @@ export class AccountService {
       }
       return availability;
    }
+
+   async findByID(id: number) {
+      return this.prisma.user.findUnique({ where: { id } });
+   }
+
+   async find(where: Prisma.UserWhereInput) {
+      return this.prisma.user.findFirst({ where });
+   }
+
+   async create(data: Prisma.UserCreateInput) {
+      return await this.prisma.user.create({ data });
+   }
 }

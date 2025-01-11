@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
+import * as passport from 'passport';
 import { getSessionConfig } from './core/config/session.config';
 import { CoreModule } from './core/core.module';
 import { RedisService } from './core/redis/redis.service';
@@ -19,6 +20,9 @@ async function bootstrap() {
 
    app.use(cookieParser(configService.getOrThrow('COOKIE_SECRET')));
    app.use(session(getSessionConfig(configService, app.get(RedisService))));
+   app.use(passport.initialize());
+   app.use(passport.session());
+
    await app.listen(configService.getOrThrow('PORT'));
 }
 bootstrap();

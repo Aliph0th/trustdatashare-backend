@@ -14,6 +14,7 @@ export const getSessionConfig = (config: ConfigService, redis: RedisService): Se
    },
    saveUninitialized: false,
    resave: false,
+   name: config.getOrThrow('SESSION_NAME'),
    store: new RedisStore({
       prefix: config.getOrThrow('REDIS_STORE_PREFIX'),
       client: redis

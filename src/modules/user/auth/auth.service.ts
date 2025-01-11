@@ -9,19 +9,17 @@ import type { RegisterUserDTO } from './dto';
 export class AuthService {
    constructor(
       private readonly prisma: PrismaService,
-      private readonly users: AccountService
+      private readonly accountService: AccountService
    ) {}
 
    async createUser({ email, username, password }: RegisterUserDTO) {
-      const candidate = await this.prisma.user.findFirst({
-         where: { OR: [{ email }, { username }] }
-      });
+      const candidate = await this.accountService.find({ OR: [{ email }, { username }] });
 
       if (candidate) {
          throw new ConflictException('User with such email or username already exists');
       }
       const hashedPassword = await bcrypt.hash(password, USER_PASSWORD_SALT_ROUNDS);
-      await this.prisma.user.create({ data: { email, username, password: hashedPassword } });
+      await this.accountService.create({ email, username, password: hashedPassword });
       return true;
    }
 
