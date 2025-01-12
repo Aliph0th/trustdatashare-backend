@@ -1,7 +1,16 @@
-import { Body, Controller, Post, Request } from '@nestjs/common';
-import { Authenticated, LocalAuthentication } from '#/decorators';
+import {
+   Body,
+   ClassSerializerInterceptor,
+   Controller,
+   HttpCode,
+   HttpStatus,
+   Post,
+   Request,
+   UseInterceptors
+} from '@nestjs/common';
+import { LocalAuthentication } from '#/decorators';
 import { AuthService } from './auth.service';
-import { RegisterUserDTO } from './dto';
+import { RegisterUserDTO, UserDTO } from './dto';
 
 @Controller('auth')
 export class AuthController {
@@ -14,13 +23,9 @@ export class AuthController {
 
    @LocalAuthentication()
    @Post('login')
+   @UseInterceptors(ClassSerializerInterceptor)
+   @HttpCode(HttpStatus.OK)
    async login(@Request() req: any) {
-      return req.user;
-   }
-
-   @Authenticated()
-   @Post('ok')
-   async ok(@Request() req: any) {
-      return req.user;
+      return new UserDTO(req.user);
    }
 }
