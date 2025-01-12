@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
+import helmet from 'helmet';
 import * as passport from 'passport';
 import { getSessionConfig } from './core/config/session.config';
 import { CoreModule } from './core/core.module';
@@ -18,6 +19,7 @@ async function bootstrap() {
    app.enableCors({ credentials: true, origin: configService.getOrThrow('ALLOWED_ORIGIN') });
    app.useGlobalPipes(new ValidationPipe({ transform: true, stopAtFirstError: true }));
 
+   app.use(helmet());
    app.use(cookieParser(configService.getOrThrow('COOKIE_SECRET')));
    app.use(session(getSessionConfig(configService, app.get(RedisService))));
    app.use(passport.initialize());
