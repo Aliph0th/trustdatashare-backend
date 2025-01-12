@@ -1,4 +1,5 @@
 import 'express-session';
+import { SessionMetadata } from './session.types';
 
 declare module 'express-session' {
    interface Session {
@@ -6,5 +7,6 @@ declare module 'express-session' {
          user: number;
       };
       createdAt: string;
+      metadata: SessionMetadata;
    }
 }
