@@ -1,18 +1,18 @@
-export interface LocationData {
+export type LocationData = {
    country?: string;
    city?: string;
    latitude?: number;
    longitude?: number;
-}
+};
 
-export interface DeviceData {
+export type DeviceData = {
    client?: string;
    os?: string;
    device?: string;
-}
+};
 
-export interface SessionMetadata {
+export type SessionMetadata = {
    location: LocationData;
    device: DeviceData;
    ip: string;
-}
+};

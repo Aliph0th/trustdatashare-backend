@@ -1,7 +1,9 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { TokenType } from '@prisma/client';
 import { USER_PASSWORD_SALT_ROUNDS } from '#/constants';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { TokenService } from '../../token/token.service';
 import { AccountService } from '../account/account.service';
 import type { RegisterUserDTO } from './dto';
 
@@ -9,7 +11,8 @@ import type { RegisterUserDTO } from './dto';
 export class AuthService {
    constructor(
       private readonly prisma: PrismaService,
-      private readonly accountService: AccountService
+      private readonly accountService: AccountService,
+      private readonly tokenService: TokenService
    ) {}
 
    async createUser({ email, username, password }: RegisterUserDTO) {
@@ -34,5 +37,10 @@ export class AuthService {
       }
 
       return user;
+   }
+
+   async verifyEmail(token: string) {
+      const id = await this.tokenService.useToken(token, TokenType.EMAIL_VERIFICATION);
+      await this.accountService.setVerifiedEmail(id);
    }
 }

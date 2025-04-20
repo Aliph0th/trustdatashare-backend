@@ -1,7 +1,9 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
+import { SessionService } from '$/modules/session/session.service';
 import { Request } from 'express';
-import { SessionService } from '../../../../src/modules/session/session.service';
+import { METADATA } from '../constants';
 
 @Injectable()
 export class LocalAuthGuard extends AuthGuard('local') {
@@ -31,8 +33,24 @@ export class LocalAuthGuard extends AuthGuard('local') {
 
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {
+   constructor(private readonly reflector: Reflector) {}
+
    async canActivate(context: ExecutionContext) {
-      const request = context.switchToHttp().getRequest();
-      return request.isAuthenticated();
+      const isPublic = this.reflector.get(METADATA.PUBLIC, context.getHandler());
+      if (isPublic) {
+         return true;
+      }
+      const request = context.switchToHttp().getRequest<Request>();
+      if (!request.isAuthenticated()) {
+         throw new UnauthorizedException();
+      }
+      const notCompletedAllowed = this.reflector.get(METADATA.UNCOMPLETED_AUTH, context.getHandler());
+      if (notCompletedAllowed) {
+         return true;
+      }
+      if (!request.user?.isEmailVerified) {
+         throw new UnauthorizedException('You must verify email first');
+      }
+      return true;
    }
 }

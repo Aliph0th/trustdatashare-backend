@@ -14,9 +14,17 @@ export class SessionService {
 
    private readonly countryByCode = new Intl.DisplayNames(['en'], { type: 'region' });
    private readonly deviceDetector = new DeviceDetector();
-   applySessionMetadata(request: Request) {
+
+   applySessionMetadata(request: Request, userID?: number) {
       request.session.createdAt = new Date().toISOString();
       request.session.metadata = this.getSessionMetadata(request);
+      if (userID) {
+         if (!request.session.passport) {
+            request.session.passport = { user: userID };
+         } else {
+            request.session.passport.user = userID;
+         }
+      }
    }
 
    private getSessionMetadata(request: Request): SessionMetadata {

@@ -39,7 +39,7 @@ export const VerifyEmail = ({
               Hello, {username}!
             </Text>
             <Text className="text-black text-[14px] leading-[24px]">
-              Please enter the code below to verify your email or click on the button
+              Please click on the button below to verify your email
             </Text>
             <Section className="text-center mt-[32px] mb-[32px]">
                <Text className="text-black text-[18px] text-center leading-[24px] italic font-semibold">

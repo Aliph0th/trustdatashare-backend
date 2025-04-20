@@ -12,6 +12,7 @@ export class UserDTO {
    isEmailVerified!: boolean;
    createdAt!: string;
    updatedAt!: string;
+   hashes!: number;
 
    @Exclude()
    password!: string;

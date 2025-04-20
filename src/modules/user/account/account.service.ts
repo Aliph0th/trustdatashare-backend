@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, TokenType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { TokenService } from '../../token/token.service';
 import { UserCredentialsDTO } from './dto';
@@ -35,10 +35,8 @@ export class AccountService {
       return availability;
    }
 
-   async verifyEmail(token: string) {
-      const id = await this.tokenService.useToken(token, TokenType.EMAIL_VERIFICATION);
-
-      const user = await this.prisma.user.update({
+   async setVerifiedEmail(id: number) {
+      return await this.prisma.user.update({
          where: { id },
          data: { isEmailVerified: true }
       });
