@@ -19,8 +19,7 @@ export class AuthService {
          throw new ConflictException('User with such email or username already exists');
       }
       const hashedPassword = await bcrypt.hash(password, USER_PASSWORD_SALT_ROUNDS);
-      await this.accountService.create({ email, username, password: hashedPassword });
-      return true;
+      return await this.accountService.create({ email, username, password: hashedPassword });
    }
 
    async validateUser(login: string, password: string) {

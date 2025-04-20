@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, TokenType } from '@prisma/client';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { TokenService } from '../../token/token.service';
 import { UserCredentialsDTO } from './dto';
 
 @Injectable()
 export class AccountService {
-   constructor(private readonly prisma: PrismaService) {}
+   constructor(
+      private readonly prisma: PrismaService,
+      private readonly tokenService: TokenService
+   ) {}
 
    async isCredentialsAvailable({ email, username }: UserCredentialsDTO) {
       const conditions: Prisma.UserWhereInput[] = [];
@@ -29,6 +33,15 @@ export class AccountService {
          availability.username = !users.some(user => user.username === username);
       }
       return availability;
+   }
+
+   async verifyEmail(token: string) {
+      const id = await this.tokenService.useToken(token, TokenType.EMAIL_VERIFICATION);
+
+      const user = await this.prisma.user.update({
+         where: { id },
+         data: { isEmailVerified: true }
+      });
    }
 
    async findByID(id: number) {

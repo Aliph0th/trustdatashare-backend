@@ -14,12 +14,16 @@
       "skipLibCheck": true,
       "strictNullChecks": true,
       "noImplicitAny": true,
+      "jsx": "react",
       "strictBindCallApply": true,
       "forceConsistentCasingInFileNames": true,
       "noFallthroughCasesInSwitch": true,
       "strict": true,
       "paths": {
-         "#/*": ["libs/common/src/*"]
+         "#/*": ["libs/common/src/*"],
+         "#/": ["libs/common/src"],
+         "$/": ["src"],
+         "$/*": ["src/*"]
       }
    }
 }

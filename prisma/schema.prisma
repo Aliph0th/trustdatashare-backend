@@ -19,6 +19,27 @@ model User {
    isEmailVerified Boolean  @default(false) @map("is_email_verified")
    createdAt       DateTime @default(now()) @map("created_at")
    updatedAt       DateTime @updatedAt @map("updated_at")
+   hashes          Int      @default(0)
+
+   tokens Token[]
 
    @@map("users")
+}
+
+model Token {
+   id        Int       @id @default(autoincrement())
+   user      User      @relation(fields: [userID], references: [id], onDelete: Cascade)
+   userID    Int       @map("user_id")
+   expires   DateTime
+   type      TokenType
+   token     String    @unique
+   createdAt DateTime  @default(now()) @map("created_at")
+
+   @@map("tokens")
+}
+
+enum TokenType {
+   EMAIL_VERIFICATION
+
+   @@map("token_types")
 }
