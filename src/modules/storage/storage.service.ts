@@ -13,8 +13,8 @@ export class StorageService {
       private readonly http: HttpService
    ) {}
 
-   async getFile(file: string) {
-      const resource = `${this.configService.getOrThrow('S3_FOLDER')}/${file}`;
+   async get(file: string) {
+      const resource = `${this.configService.getOrThrow('S3_FOLDER')}/${file}.txt`;
       const payloadHash = this.SHA256('', 'hex');
       const headers: Record<string, string | number> = {
          host: this.host,
@@ -32,6 +32,26 @@ export class StorageService {
          responseType: 'arraybuffer'
       });
       return data;
+   }
+
+   async delete(file: string) {
+      const resource = `${this.configService.getOrThrow('S3_FOLDER')}/${file}.txt`;
+      const payloadHash = this.SHA256('', 'hex');
+      const headers: Record<string, string | number> = {
+         host: this.host,
+         'x-amz-content-sha256': payloadHash,
+         'x-amz-date': getISODate()
+      };
+      const authorization = this.signAuthorization({
+         method: 'DELETE',
+         payloadHash,
+         resource,
+         headers
+      });
+      await this.http.axiosRef.delete<Buffer>(resource, {
+         headers: { ...headers, Authorization: authorization }
+      });
+      return file;
    }
 
    async upload(content: string) {

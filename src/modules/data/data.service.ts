@@ -1,4 +1,10 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+   BadRequestException,
+   ForbiddenException,
+   Injectable,
+   NotFoundException,
+   UnauthorizedException
+} from '@nestjs/common';
 import { PrismaService } from '$/core/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import type { Request } from 'express';
@@ -39,5 +45,28 @@ export class DataService {
          data: instance,
          include: { owner: { select: { id: true, username: true, isPremium: true } } }
       });
+   }
+
+   async getByID(id: string, authorization?: string) {
+      const [prefix, password] = authorization?.split(' ') || [];
+      const data = await this.prisma.data.findUnique({
+         where: { id },
+         include: { owner: { select: { id: true, username: true, isPremium: true } } }
+      });
+      const isExpired = new Date(data.createdAt).getTime() + data.ttl * 1000 < Date.now();
+      if (!data || (data.ttl > 0 && isExpired)) {
+         throw new NotFoundException();
+      }
+      if (data.password) {
+         if (prefix?.toLowerCase() !== 'basic') {
+            throw new BadRequestException('Invalid authorization header prefix');
+         }
+         const isCorrect = await bcrypt.compare(password || '', data.password);
+         if (!isCorrect) {
+            throw new UnauthorizedException();
+         }
+      }
+      const content = (await this.storageService.get(data.id)).toString();
+      return { data, content };
    }
 }

@@ -1,5 +1,4 @@
 import { Exclude } from 'class-transformer';
-import { Data } from '@prisma/client';
 
 export class DataDTO {
    id: string;
@@ -22,7 +21,7 @@ export class DataDTO {
    @Exclude()
    ownerID: number;
 
-   constructor(partial: Partial<Data & { isPublic?: boolean }>) {
+   constructor(partial: Partial<DataDTO>) {
       Object.assign(this, partial);
    }
 }

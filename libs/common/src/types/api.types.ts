@@ -1,5 +1,5 @@
 export type S3Authorization = {
-   method: 'GET' | 'PUT';
+   method: 'GET' | 'PUT' | 'DELETE';
    resource: string;
    query?: Record<string, string | number>;
    headers: Record<string, string | number>;
