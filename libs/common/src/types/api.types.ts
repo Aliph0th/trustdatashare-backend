@@ -1,0 +1,7 @@
+export type S3Authorization = {
+   method: 'GET' | 'PUT';
+   resource: string;
+   query?: Record<string, string | number>;
+   headers: Record<string, string | number>;
+   payloadHash: string;
+};

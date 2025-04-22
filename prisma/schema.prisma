@@ -15,13 +15,13 @@ model User {
    isPremium       Boolean  @default(false) @map("is_premium")
    avatar          String?
    bio             String?
-   isVerified      Boolean  @default(false) @map("is_verified")
    isEmailVerified Boolean  @default(false) @map("is_email_verified")
    createdAt       DateTime @default(now()) @map("created_at")
    updatedAt       DateTime @updatedAt @map("updated_at")
    hashes          Int      @default(0)
 
    tokens Token[]
+   data   Data[]
 
    @@map("users")
 }
@@ -36,6 +36,21 @@ model Token {
    createdAt DateTime  @default(now()) @map("created_at")
 
    @@map("tokens")
+}
+
+model Data {
+   id            String   @id @default(uuid()) @db.Uuid
+   ttl           Int      @default(-1)
+   owner         User?    @relation(fields: [ownerID], references: [id], onDelete: Cascade)
+   ownerID       Int?     @map("owner_id")
+   isOwnerHidden Boolean  @default(false) @map("owner_hidden")
+   title         String?  @db.VarChar(20)
+   description   String?  @db.VarChar(500)
+   password      String?
+   createdAt     DateTime @default(now()) @map("created_at")
+   updatedAt     DateTime @updatedAt @map("updated_at")
+
+   @@map("data")
 }
 
 enum TokenType {

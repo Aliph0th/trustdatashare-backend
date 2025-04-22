@@ -8,7 +8,6 @@ export class UserDTO {
    isPremium!: boolean;
    avatar!: string | null;
    bio!: string | null;
-   isVerified!: boolean;
    isEmailVerified!: boolean;
    createdAt!: string;
    updatedAt!: string;

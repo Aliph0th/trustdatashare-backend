@@ -31,7 +31,7 @@ export class AuthController {
    async register(@Body() dto: RegisterUserDTO, @Req() req: Request) {
       const user = await this.authService.createUser(dto);
       const token = await this.tokenService.issueForEmailVerification(user.id);
-      await this.mailService.sendEmailVerification(user.email, user.username, token);
+      // await this.mailService.sendEmailVerification(user.email, user.username, token);
 
       this.sessionService.applySessionMetadata(req, user.id);
 

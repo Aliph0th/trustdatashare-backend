@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { TokenType } from '@prisma/client';
-import { USER_PASSWORD_SALT_ROUNDS } from '#/constants';
+import { USER_SALT_ROUNDS } from '#/constants';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { TokenService } from '../../token/token.service';
 import { AccountService } from '../account/account.service';
@@ -21,7 +21,7 @@ export class AuthService {
       if (candidate) {
          throw new ConflictException('User with such email or username already exists');
       }
-      const hashedPassword = await bcrypt.hash(password, USER_PASSWORD_SALT_ROUNDS);
+      const hashedPassword = await bcrypt.hash(password, USER_SALT_ROUNDS);
       return await this.accountService.create({ email, username, password: hashedPassword });
    }
 
