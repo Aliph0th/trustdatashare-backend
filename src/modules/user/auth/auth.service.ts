@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import type { Request } from 'express';
 import { TokenType } from '@prisma/client';
 import { USER_SALT_ROUNDS } from '#/constants';
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -39,8 +40,9 @@ export class AuthService {
       return user;
    }
 
-   async verifyEmail(token: string) {
+   async verifyEmail(token: string, request: Request) {
       const id = await this.tokenService.useToken(token, TokenType.EMAIL_VERIFICATION);
       await this.accountService.setVerifiedEmail(id);
+      request.user.isEmailVerified = true;
    }
 }

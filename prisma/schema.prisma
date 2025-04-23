@@ -14,7 +14,6 @@ model User {
    username        String   @unique
    isPremium       Boolean  @default(false) @map("is_premium")
    avatar          String?
-   bio             String?
    isEmailVerified Boolean  @default(false) @map("is_email_verified")
    createdAt       DateTime @default(now()) @map("created_at")
    updatedAt       DateTime @updatedAt @map("updated_at")

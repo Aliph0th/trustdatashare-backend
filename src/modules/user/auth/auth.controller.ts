@@ -13,6 +13,7 @@ import { AuthUncompleted, LocalAuthentication, Public } from '#/decorators';
 import { MailService } from '../../mail/mail.service';
 import { SessionService } from '../../session/session.service';
 import { TokenService } from '../../token/token.service';
+import { AccountService } from '../account/account.service';
 import { UserDTO } from '../account/dto';
 import { AuthService } from './auth.service';
 import { EmailVerifyDTO, RegisterUserDTO } from './dto';
@@ -22,8 +23,8 @@ export class AuthController {
    constructor(
       private readonly authService: AuthService,
       private readonly tokenService: TokenService,
-      private readonly mailService: MailService,
-      private readonly sessionService: SessionService
+      private readonly sessionService: SessionService,
+      private readonly accountService: AccountService
    ) {}
 
    @Post('register')
@@ -33,7 +34,7 @@ export class AuthController {
       const token = await this.tokenService.issueForEmailVerification(user.id);
       // await this.mailService.sendEmailVerification(user.email, user.username, token);
 
-      this.sessionService.applySessionMetadata(req, user.id);
+      this.sessionService.applySessionMetadata(req, { id: user.id, isEmailVerified: false, isPremium: false });
 
       return true;
    }
@@ -44,14 +45,15 @@ export class AuthController {
    @HttpCode(HttpStatus.OK)
    @Public()
    async login(@Req() req: Request) {
-      return new UserDTO(req.user!);
+      const user = await this.accountService.findByID(req.user.id);
+      return new UserDTO(user);
    }
 
    @Post('email/verify')
    @HttpCode(HttpStatus.OK)
    @AuthUncompleted()
-   async verifyEmail(@Body() dto: EmailVerifyDTO) {
-      await this.authService.verifyEmail(dto.token);
+   async verifyEmail(@Body() dto: EmailVerifyDTO, @Req() req: Request) {
+      await this.authService.verifyEmail(dto.token, req);
       return true;
    }
 }

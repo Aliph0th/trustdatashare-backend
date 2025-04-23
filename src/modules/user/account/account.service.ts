@@ -1,15 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '$/core/prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 import { Prisma } from '@prisma/client';
-import { PrismaService } from '../../../core/prisma/prisma.service';
-import { TokenService } from '../../token/token.service';
-import { UserCredentialsDTO } from './dto';
+import { USER_SALT_ROUNDS } from '#/constants';
+import { PatchUserDTO, UserCredentialsDTO } from './dto';
 
 @Injectable()
 export class AccountService {
-   constructor(
-      private readonly prisma: PrismaService,
-      private readonly tokenService: TokenService
-   ) {}
+   constructor(private readonly prisma: PrismaService) {}
 
    async isCredentialsAvailable({ email, username }: UserCredentialsDTO) {
       const conditions: Prisma.UserWhereInput[] = [];
@@ -44,6 +42,29 @@ export class AccountService {
 
    async findByID(id: number) {
       return this.prisma.user.findUnique({ where: { id } });
+   }
+
+   async patch(id: number, dto: PatchUserDTO) {
+      if (Object.keys(dto).length === 0) {
+         throw new BadRequestException('You should specify at least one update');
+      }
+      const { repeatedPassword: _, ...updates } = dto;
+      if (updates.password) {
+         updates.password = await bcrypt.hash(updates.password, USER_SALT_ROUNDS);
+      }
+      try {
+         return await this.prisma.user.update({
+            where: { id },
+            data: updates
+         });
+      } catch (error) {
+         if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2025') {
+               throw new NotFoundException();
+            }
+         }
+         throw error;
+      }
    }
 
    async find(where: Prisma.UserWhereInput) {

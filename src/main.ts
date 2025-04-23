@@ -19,7 +19,7 @@ async function bootstrap() {
    app.setGlobalPrefix('api');
    app.enableVersioning({ type: VersioningType.URI, defaultVersion: configService.getOrThrow('ACTUAL_VERSION') });
    app.enableCors({ credentials: true, origin: configService.getOrThrow('ALLOWED_ORIGIN') });
-   app.useGlobalPipes(new ValidationPipe({ transform: true, stopAtFirstError: true }));
+   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, stopAtFirstError: true }));
    app.useGlobalGuards(new AuthenticatedGuard(reflector));
 
    app.use(helmet());

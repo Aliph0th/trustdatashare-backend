@@ -16,3 +16,9 @@ export type SessionMetadata = {
    device: DeviceData;
    ip: string;
 };
+
+export type SessionUser = {
+   id: number;
+   isEmailVerified: boolean;
+   isPremium: boolean;
+};

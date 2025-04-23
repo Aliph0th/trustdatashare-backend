@@ -55,7 +55,7 @@ export class DataService {
 
       const [prefix, password] = authorization?.split(' ') || [];
       const isExpired = new Date(data?.createdAt).getTime() + data?.ttl * 1000 < Date.now();
-      if (!data || (data.ttl > 0 && isExpired)) {
+      if (!data || (data?.ttl > 0 && isExpired)) {
          throw new NotFoundException();
       }
       if (data.password) {
@@ -82,7 +82,7 @@ export class DataService {
          select: { id: true, createdAt: true, ttl: true, owner: { select: { id: true } } }
       });
       const isExpired = new Date(data?.createdAt).getTime() + data?.ttl * 1000 < Date.now();
-      if (!data || (data.ttl > 0 && isExpired)) {
+      if (!data || (data?.ttl > 0 && isExpired)) {
          throw new NotFoundException();
       }
       if (data.owner.id !== userID) {

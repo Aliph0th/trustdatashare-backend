@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { lookup } from 'geoip-lite';
 import * as requestIP from 'request-ip';
-import { SessionMetadata } from '#/types';
+import { SessionMetadata, SessionUser } from '#/types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import DeviceDetector = require('device-detector-js');
@@ -15,14 +15,14 @@ export class SessionService {
    private readonly countryByCode = new Intl.DisplayNames(['en'], { type: 'region' });
    private readonly deviceDetector = new DeviceDetector();
 
-   applySessionMetadata(request: Request, userID?: number) {
+   applySessionMetadata(request: Request, user?: SessionUser) {
       request.session.createdAt = new Date().toISOString();
       request.session.metadata = this.getSessionMetadata(request);
-      if (userID) {
+      if (user) {
          if (!request.session.passport) {
-            request.session.passport = { user: userID };
+            request.session.passport = { user };
          } else {
-            request.session.passport.user = userID;
+            request.session.passport.user = user;
          }
       }
    }
