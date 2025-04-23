@@ -11,7 +11,7 @@ import type { Request } from 'express';
 import type { Prisma } from '@prisma/client';
 import { DATA_SALT_ROUNDS } from '#/constants';
 import { StorageService } from '../storage/storage.service';
-import type { CreateDataDTO } from './dto';
+import type { CreateDataDTO, UpdateDataDTO } from './dto';
 
 @Injectable()
 export class DataService {
@@ -48,12 +48,13 @@ export class DataService {
    }
 
    async getByID(id: string, authorization?: string) {
-      const [prefix, password] = authorization?.split(' ') || [];
       const data = await this.prisma.data.findUnique({
          where: { id },
          include: { owner: { select: { id: true, username: true, isPremium: true } } }
       });
-      const isExpired = new Date(data.createdAt).getTime() + data.ttl * 1000 < Date.now();
+
+      const [prefix, password] = authorization?.split(' ') || [];
+      const isExpired = new Date(data?.createdAt).getTime() + data?.ttl * 1000 < Date.now();
       if (!data || (data.ttl > 0 && isExpired)) {
          throw new NotFoundException();
       }
@@ -66,7 +67,42 @@ export class DataService {
             throw new UnauthorizedException();
          }
       }
+
       const content = (await this.storageService.get(data.id)).toString();
       return { data, content };
+   }
+
+   async patch(id: string, dto: UpdateDataDTO, userID?: number) {
+      if (Object.keys(dto).length === 0) {
+         throw new BadRequestException('You should specify at least one update');
+      }
+
+      const data = await this.prisma.data.findFirst({
+         where: { id },
+         select: { id: true, createdAt: true, ttl: true, owner: { select: { id: true } } }
+      });
+      const isExpired = new Date(data?.createdAt).getTime() + data?.ttl * 1000 < Date.now();
+      if (!data || (data.ttl > 0 && isExpired)) {
+         throw new NotFoundException();
+      }
+      if (data.owner.id !== userID) {
+         throw new ForbiddenException();
+      }
+      const { content, ...updates } = dto;
+
+      if (content) {
+         await this.storageService.upload(content, data.id);
+      }
+
+      const updated = await this.prisma.data.update({
+         where: { id },
+         data: {
+            ...updates,
+            updatedAt: new Date()
+         },
+         include: { owner: { select: { id: true, username: true, isPremium: true } } }
+      });
+
+      return { data: updated, content };
    }
 }

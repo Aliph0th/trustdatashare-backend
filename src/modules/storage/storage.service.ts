@@ -54,10 +54,10 @@ export class StorageService {
       return file;
    }
 
-   async upload(content: string) {
+   async upload(content: string, id?: string) {
       const file = Buffer.from(content, 'utf-8');
       const payloadHash = this.SHA256(file || '', 'hex');
-      const fileID = crypto.randomUUID();
+      const fileID = id || crypto.randomUUID();
       const resource = `/${this.configService.getOrThrow('S3_FOLDER')}/${fileID}.txt`;
       const headers: Record<string, string | number> = {
          'Content-Length': file.byteLength,

@@ -5,6 +5,7 @@ import {
    Get,
    Headers,
    Param,
+   Patch,
    Post,
    Req,
    UseInterceptors
@@ -12,7 +13,7 @@ import {
 import type { Request } from 'express';
 import { Public } from '#/decorators';
 import { DataService } from './data.service';
-import { CreateDataDTO, DataDTO, GetDataDTO } from './dto';
+import { CreateDataDTO, DataDTO, GetDataDTO, UpdateDataDTO } from './dto';
 
 @Controller('data')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -31,6 +32,13 @@ export class DataController {
    @Public()
    async get(@Param() { id }: GetDataDTO, @Headers('Authorization') auth?: string) {
       const { data, content } = await this.dataService.getByID(id, auth);
+      const owner = data.isOwnerHidden ? null : data.owner;
+      return new DataDTO({ ...data, isPublic: !data.password, owner, content });
+   }
+
+   @Patch('/:id')
+   async patch(@Param() { id }: GetDataDTO, @Body() dto: UpdateDataDTO, @Req() req: Request) {
+      const { data, content } = await this.dataService.patch(id, dto, req.user?.id);
       const owner = data.isOwnerHidden ? null : data.owner;
       return new DataDTO({ ...data, isPublic: !data.password, owner, content });
    }
