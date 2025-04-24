@@ -1,23 +1,18 @@
-import {
-   Body,
-   ClassSerializerInterceptor,
-   Controller,
-   Get,
-   NotFoundException,
-   Patch,
-   Query,
-   Req,
-   UseInterceptors
-} from '@nestjs/common';
+import { Body, ClassSerializerInterceptor, Controller, Get, NotFoundException, Patch, Query, Req, UseInterceptors } from '@nestjs/common';
 import type { Request } from 'express';
 import { Public } from '#/decorators';
+import { SessionService } from '../../session/session.service';
 import { AccountService } from './account.service';
 import { PatchUserDTO, UserCredentialsDTO, UserDTO } from './dto';
+
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
 export class AccountController {
-   constructor(private readonly accountService: AccountService) {}
+   constructor(
+      private readonly accountService: AccountService,
+      private readonly sessionService: SessionService
+   ) {}
 
    @Get('availability')
    @Public()
@@ -31,7 +26,8 @@ export class AccountController {
       if (!user) {
          throw new NotFoundException('User not found');
       }
-      return new UserDTO(user);
+      const sessions = await this.sessionService.findSessions(req);
+      return new UserDTO({ ...user, sessions });
    }
 
    @Patch('me')

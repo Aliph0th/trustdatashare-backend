@@ -1,30 +1,71 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
+import type { Request } from 'express';
+import { SessionData } from 'express-session';
 import { lookup } from 'geoip-lite';
 import * as requestIP from 'request-ip';
-import { SessionMetadata, SessionUser } from '#/types';
+import { ActiveSession, SessionMetadata, SessionUser } from '#/types';
+import { RedisService } from '../../core/redis/redis.service';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import DeviceDetector = require('device-detector-js');
 
 @Injectable()
 export class SessionService {
-   constructor(private readonly configService: ConfigService) {}
+   constructor(
+      private readonly configService: ConfigService,
+      private readonly redisService: RedisService
+   ) {}
 
    private readonly countryByCode = new Intl.DisplayNames(['en'], { type: 'region' });
    private readonly deviceDetector = new DeviceDetector();
 
    applySessionMetadata(request: Request, user?: SessionUser) {
-      request.session.createdAt = new Date().toISOString();
+      request.session.createdAt = new Date();
       request.session.metadata = this.getSessionMetadata(request);
       if (user) {
-         if (!request.session.passport) {
-            request.session.passport = { user };
-         } else {
-            request.session.passport.user = user;
+         request.session.user = user;
+      }
+   }
+
+   public async findSessions(req: Request) {
+      const userID = req.user.id;
+      if (!userID) {
+         return null;
+      }
+
+      const keys = await this.redisService.keys(`${this.configService.getOrThrow('REDIS_STORE_PREFIX')}*`);
+
+      const sessions: ActiveSession[] = [];
+      let currentSession: ActiveSession = null;
+
+      for (const key of keys) {
+         const sessionData = await this.redisService.get(key);
+         if (!sessionData) {
+            continue;
+         }
+         const session = JSON.parse(sessionData) as SessionData & {
+            passport: {
+               user: SessionUser;
+            };
+         };
+         const id = key.split(':')[1];
+         if (id === req.session.id) {
+            currentSession = {
+               createdAt: session.createdAt,
+               metadata: session.metadata
+            };
+         } else if (session?.passport?.user?.id === userID) {
+            sessions.push({
+               createdAt: session.createdAt,
+               metadata: session.metadata
+            });
          }
       }
+
+      sessions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+      return { current: currentSession, sessions };
    }
 
    private getSessionMetadata(request: Request): SessionMetadata {

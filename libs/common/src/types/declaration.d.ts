@@ -2,11 +2,9 @@ import 'express-session';
 import { SessionMetadata, SessionUser } from './session.types';
 
 declare module 'express-session' {
-   interface Session {
-      passport: {
-         user: SessionUser;
-      };
-      createdAt: string;
+   interface SessionData {
+      user: SessionUser;
+      createdAt: Date;
       metadata: SessionMetadata;
    }
 }

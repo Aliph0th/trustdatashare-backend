@@ -22,3 +22,8 @@ export type SessionUser = {
    isEmailVerified: boolean;
    isPremium: boolean;
 };
+
+export type ActiveSession = {
+   metadata: SessionMetadata;
+   createdAt: Date;
+};

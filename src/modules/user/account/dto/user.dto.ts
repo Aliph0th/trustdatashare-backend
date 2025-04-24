@@ -1,5 +1,6 @@
 import { Exclude } from 'class-transformer';
 import { User } from '@prisma/client';
+import { ActiveSession } from '#/types';
 
 export class UserDTO {
    id: number;
@@ -9,14 +10,18 @@ export class UserDTO {
    avatar?: string | null;
    bio?: string | null;
    isEmailVerified: boolean;
-   createdAt: string;
-   updatedAt: string;
+   createdAt: Date;
+   updatedAt: Date;
    hashes: number;
+   sessions?: {
+      current?: ActiveSession;
+      sessions: ActiveSession[];
+   };
 
    @Exclude()
    password: string;
 
-   constructor(partial: Partial<User>) {
+   constructor(partial: Partial<UserDTO>) {
       Object.assign(this, partial);
    }
 }
