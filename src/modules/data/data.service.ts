@@ -9,7 +9,8 @@ import { PrismaService } from '$/core/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import type { Request } from 'express';
 import type { Prisma } from '@prisma/client';
-import { DATA_SALT_ROUNDS } from '#/constants';
+import { DATA_SALT_ROUNDS, MAX_GUEST_DATA_TTL } from '#/constants';
+import '#/constants/api.constants';
 import { StorageService } from '../storage/storage.service';
 import type { CreateDataDTO, UpdateDataDTO } from './dto';
 
@@ -21,18 +22,22 @@ export class DataService {
    ) {}
 
    async create({ content, description, password, title, ttl, hideOwner }: CreateDataDTO, request?: Request) {
-      if (hideOwner && !request.user?.isPremium) {
+      if (hideOwner && !request?.user?.isPremium) {
          throw new ForbiddenException('You are not allowed to hide yourself without premium');
       }
+
+      const userID = request?.user?.id;
       const storageFile = await this.storageService.upload(content);
+      if (!userID && ttl === -1) {
+         ttl = MAX_GUEST_DATA_TTL;
+      }
       const instance: Prisma.DataCreateInput = {
          id: storageFile,
          description,
          title,
-         ttl
+         ttl: userID ? ttl : Math.min(ttl, MAX_GUEST_DATA_TTL)
       };
 
-      const userID = request.user?.id;
       if (userID) {
          instance.owner = { connect: { id: userID } };
       }

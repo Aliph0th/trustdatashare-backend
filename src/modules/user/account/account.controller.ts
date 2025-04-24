@@ -1,10 +1,19 @@
-import { Body, ClassSerializerInterceptor, Controller, Get, NotFoundException, Patch, Query, Req, UseInterceptors } from '@nestjs/common';
+import {
+   Body,
+   ClassSerializerInterceptor,
+   Controller,
+   Get,
+   NotFoundException,
+   Patch,
+   Query,
+   Req,
+   UseInterceptors
+} from '@nestjs/common';
 import type { Request } from 'express';
 import { Public } from '#/decorators';
 import { SessionService } from '../../session/session.service';
 import { AccountService } from './account.service';
 import { PatchUserDTO, UserCredentialsDTO, UserDTO } from './dto';
-
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
