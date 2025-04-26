@@ -5,3 +5,10 @@ export type S3Authorization = {
    headers: Record<string, string | number>;
    payloadHash: string;
 };
+
+export type KMSResponse = {
+   keyId: string;
+   versionId: string;
+   ciphertext?: string;
+   plaintext?: string;
+};

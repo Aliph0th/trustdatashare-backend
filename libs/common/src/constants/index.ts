@@ -6,3 +6,7 @@ export const METADATA = {
    PUBLIC: 'public',
    UNCOMPLETED_AUTH: 'auth_uncompleted'
 };
+
+export const REDIS_KEYS = {
+   IAM_TOKEN: 'YC_IAM'
+};

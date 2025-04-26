@@ -2,15 +2,18 @@ import {
    BadRequestException,
    ForbiddenException,
    Injectable,
+   InternalServerErrorException,
    NotFoundException,
    UnauthorizedException
 } from '@nestjs/common';
 import { PrismaService } from '$/core/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 import type { Request } from 'express';
 import type { Prisma } from '@prisma/client';
 import { DATA_SALT_ROUNDS, MAX_GUEST_DATA_TTL } from '#/constants';
 import '#/constants/api.constants';
+import { KmsService } from '../kms/kms.service';
 import { StorageService } from '../storage/storage.service';
 import type { CreateDataDTO, UpdateDataDTO } from './dto';
 
@@ -18,7 +21,8 @@ import type { CreateDataDTO, UpdateDataDTO } from './dto';
 export class DataService {
    constructor(
       private readonly storageService: StorageService,
-      private readonly prisma: PrismaService
+      private readonly prisma: PrismaService,
+      private readonly kmsService: KmsService
    ) {}
 
    async create({ content, description, password, title, ttl, hideOwner }: CreateDataDTO, request?: Request) {
@@ -27,21 +31,24 @@ export class DataService {
       }
 
       const userID = request?.user?.id;
-      const storageFile = await this.storageService.upload(content);
+      const fileID = randomUUID();
+      const encrypted = await this.kmsService.encrypt(content, { fileID });
+      if (!encrypted) {
+         throw new InternalServerErrorException();
+      }
+      await this.storageService.upload(encrypted.ciphertext, fileID);
       if (!userID && ttl === -1) {
          ttl = MAX_GUEST_DATA_TTL;
       }
       const instance: Prisma.DataCreateInput = {
-         id: storageFile,
+         id: fileID,
          description,
          title,
          ttl: userID ? ttl : Math.min(ttl, MAX_GUEST_DATA_TTL)
       };
-
       if (userID) {
          instance.owner = { connect: { id: userID } };
       }
-
       if (password) {
          instance.password = await bcrypt.hash(password, DATA_SALT_ROUNDS);
       }
@@ -73,8 +80,12 @@ export class DataService {
          }
       }
 
-      const content = (await this.storageService.get(data.id)).toString();
-      return { data, content };
+      const encrypted = (await this.storageService.get(data.id)).toString();
+      const plain = await this.kmsService.decrypt(encrypted, { fileID: data.id });
+      if (!plain) {
+         throw new InternalServerErrorException();
+      }
+      return { data, content: plain.plaintext };
    }
 
    async patch(id: string, dto: UpdateDataDTO, userID?: number) {
