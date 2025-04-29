@@ -1,5 +1,4 @@
 import { Exclude } from 'class-transformer';
-import { User } from '@prisma/client';
 import { ActiveSession } from '#/types';
 
 export class UserDTO {
@@ -8,7 +7,6 @@ export class UserDTO {
    username: string;
    isPremium: boolean;
    avatar?: string | null;
-   bio?: string | null;
    isEmailVerified: boolean;
    createdAt: Date;
    updatedAt: Date;

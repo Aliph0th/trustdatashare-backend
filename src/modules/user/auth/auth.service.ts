@@ -4,6 +4,7 @@ import type { Request } from 'express';
 import { TokenType } from '@prisma/client';
 import { USER_SALT_ROUNDS } from '#/constants';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { MailService } from '../../mail/mail.service';
 import { TokenService } from '../../token/token.service';
 import { AccountService } from '../account/account.service';
 import type { RegisterUserDTO } from './dto';
@@ -13,7 +14,8 @@ export class AuthService {
    constructor(
       private readonly prisma: PrismaService,
       private readonly accountService: AccountService,
-      private readonly tokenService: TokenService
+      private readonly tokenService: TokenService,
+      private readonly mailService: MailService
    ) {}
 
    async createUser({ email, username, password }: RegisterUserDTO) {
@@ -44,5 +46,11 @@ export class AuthService {
       const id = await this.tokenService.useToken(token, TokenType.EMAIL_VERIFICATION);
       await this.accountService.setVerifiedEmail(id);
       request.user.isEmailVerified = true;
+   }
+
+   async resendEmail(userID: number) {
+      await this.tokenService.revokeAll(userID, TokenType.EMAIL_VERIFICATION);
+      const token = await this.tokenService.issueForEmailVerification(userID);
+      // await this.mailService.sendEmailVerification(user.email, user.username, token);
    }
 }

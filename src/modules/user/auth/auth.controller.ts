@@ -19,12 +19,14 @@ import { AuthService } from './auth.service';
 import { EmailVerifyDTO, RegisterUserDTO } from './dto';
 
 @Controller('auth')
+@UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
    constructor(
       private readonly authService: AuthService,
       private readonly tokenService: TokenService,
       private readonly sessionService: SessionService,
-      private readonly accountService: AccountService
+      private readonly accountService: AccountService,
+      private readonly mailService: MailService
    ) {}
 
    @Post('register')
@@ -36,12 +38,11 @@ export class AuthController {
 
       this.sessionService.applySessionMetadata(req, { id: user.id, isEmailVerified: false, isPremium: false });
 
-      return true;
+      return new UserDTO(user);
    }
 
    @LocalAuthentication()
    @Post('login')
-   @UseInterceptors(ClassSerializerInterceptor)
    @HttpCode(HttpStatus.OK)
    @Public()
    async login(@Req() req: Request) {
@@ -54,6 +55,14 @@ export class AuthController {
    @AuthUncompleted()
    async verifyEmail(@Body() dto: EmailVerifyDTO, @Req() req: Request) {
       await this.authService.verifyEmail(dto.token, req);
+      return true;
+   }
+
+   @Post('email/resend')
+   @HttpCode(HttpStatus.OK)
+   @AuthUncompleted()
+   async resendEmail(@Req() req: Request) {
+      await this.authService.resendEmail(req?.user?.id);
       return true;
    }
 }

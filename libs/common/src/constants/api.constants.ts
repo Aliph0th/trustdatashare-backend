@@ -4,4 +4,4 @@ export const MAX_DATA_LENGTH = {
    description: 500
 };
 export const MIN_DATA_PASSWORD_LENGTH = 5;
-export const MAX_GUEST_DATA_TTL = 3 * 24 * 60 * 60;
+export const MAX_GUEST_DATA_TTL = 24 * 60 * 60;

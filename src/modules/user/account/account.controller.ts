@@ -10,7 +10,7 @@ import {
    UseInterceptors
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { Public } from '#/decorators';
+import { AuthUncompleted, Public } from '#/decorators';
 import { SessionService } from '../../session/session.service';
 import { AccountService } from './account.service';
 import { PatchUserDTO, UserCredentialsDTO, UserDTO } from './dto';
@@ -30,6 +30,7 @@ export class AccountController {
    }
 
    @Get('me')
+   @AuthUncompleted()
    async getMe(@Req() req: Request) {
       const user = await this.accountService.findByID(req.user!.id);
       if (!user) {

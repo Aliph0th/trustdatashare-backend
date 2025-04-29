@@ -21,6 +21,10 @@ export class TokenService {
       return token;
    }
 
+   async revokeAll(userID: number, type: TokenType) {
+      await this.prisma.token.deleteMany({ where: { userID, type } });
+   }
+
    async useToken(token: string, type: TokenType) {
       const existingToken = await this.prisma.token.findUnique({
          where: { token, type }
