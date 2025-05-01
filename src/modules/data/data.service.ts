@@ -71,8 +71,11 @@ export class DataService {
          throw new NotFoundException();
       }
       if (data.password) {
+         if (!prefix || !password) {
+            throw new UnauthorizedException();
+         }
          if (prefix?.toLowerCase() !== 'basic') {
-            throw new BadRequestException('Invalid authorization header prefix');
+            throw new UnauthorizedException('Invalid authorization header prefix');
          }
          const isCorrect = await bcrypt.compare(password || '', data.password);
          if (!isCorrect) {

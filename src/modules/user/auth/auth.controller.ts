@@ -50,6 +50,13 @@ export class AuthController {
       return new UserDTO(user);
    }
 
+   @Post('logout')
+   @AuthUncompleted()
+   async logout(@Req() req: Request) {
+      req.logOut(() => {});
+      return true;
+   }
+
    @Post('email/verify')
    @HttpCode(HttpStatus.OK)
    @AuthUncompleted()

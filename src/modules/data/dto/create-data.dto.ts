@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsInt, IsOptional, Length, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsInt, IsNotIn, IsOptional, Length, Min, MinLength } from 'class-validator';
 import { MAX_DATA_LENGTH, MIN_DATA_PASSWORD_LENGTH } from '#/constants';
 
 export class CreateDataDTO {
@@ -7,7 +7,7 @@ export class CreateDataDTO {
 
    @IsOptional()
    @IsInt()
-   @IsIn([0], { message: 'ttl cannot be 0' })
+   @IsNotIn([0], { message: 'ttl cannot be 0' })
    @Min(-1)
    ttl?: number;
 

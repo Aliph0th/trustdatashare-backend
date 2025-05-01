@@ -23,9 +23,8 @@ export class DataController {
    @Post()
    @Public()
    async create(@Body() dto: CreateDataDTO, @Req() req: Request) {
-      const data = await this.dataService.create(dto, req);
-      const owner = data.isOwnerHidden ? null : data.owner;
-      return new DataDTO({ ...data, isPublic: !data.password, owner });
+      const { id } = await this.dataService.create(dto, req);
+      return { id };
    }
 
    @Get('/:id')
