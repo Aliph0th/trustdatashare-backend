@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
 import { SessionData } from 'express-session';
@@ -28,16 +28,44 @@ export class SessionService {
       }
    }
 
-   public async findSessions(req: Request) {
+   async findSessions(req: Request) {
       const userID = req.user.id;
       if (!userID) {
          return null;
       }
+      const sessions = (await this.getUserSessions(userID))
+         .map<ActiveSession>(session => ({
+            sid: session.sid,
+            createdAt: new Date(session.createdAt),
+            metadata: session.metadata
+         }))
+         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
+      return {
+         current: sessions.filter(session => session.sid === req.session.sid)[0],
+         sessions: sessions.filter(session => session.sid !== req.session.sid)
+      };
+   }
+
+   async terminateSessions(sessions: string[], req: Request) {
+      if (sessions.includes(req.session.sid)) {
+         throw new BadRequestException('You cannot terminate current session');
+      }
+      const activeSessions = await this.getUserSessions(req.user.id);
+      const ids = [];
+      for (const id of sessions) {
+         const session = activeSessions.find(active => active.sid === id);
+         if (!session) {
+            throw new NotFoundException(`Session with id ${id} not found`);
+         }
+         ids.push(session.key);
+      }
+      await this.redisService.del(...ids);
+   }
+
+   private async getUserSessions(userID: number) {
       const keys = await this.redisService.keys(`${this.configService.getOrThrow('REDIS_STORE_PREFIX')}*`);
-
-      const sessions: ActiveSession[] = [];
-      let currentSession: ActiveSession = null;
+      const sessions = [];
 
       for (const key of keys) {
          const sessionData = await this.redisService.get(key);
@@ -49,25 +77,12 @@ export class SessionService {
                user: SessionUser;
             };
          };
-         const id = key.split(':')[1];
-         if (id === req.session.id) {
-            currentSession = {
-               sid: session.sid,
-               createdAt: session.createdAt,
-               metadata: session.metadata
-            };
-         } else if (session?.passport?.user?.id === userID) {
-            sessions.push({
-               sid: session.sid,
-               createdAt: session.createdAt,
-               metadata: session.metadata
-            });
+         if (session?.passport?.user?.id === userID) {
+            sessions.push({ ...session, key });
          }
       }
 
-      sessions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-      return { current: currentSession, sessions };
+      return sessions;
    }
 
    private getSessionMetadata(request: Request): SessionMetadata {
