@@ -52,11 +52,13 @@ export class SessionService {
          const id = key.split(':')[1];
          if (id === req.session.id) {
             currentSession = {
+               sid: session.sid,
                createdAt: session.createdAt,
                metadata: session.metadata
             };
          } else if (session?.passport?.user?.id === userID) {
             sessions.push({
+               sid: session.sid,
                createdAt: session.createdAt,
                metadata: session.metadata
             });

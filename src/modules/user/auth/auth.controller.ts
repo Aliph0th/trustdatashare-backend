@@ -6,9 +6,11 @@ import {
    HttpStatus,
    Post,
    Req,
+   Res,
    UseInterceptors
 } from '@nestjs/common';
-import type { Request } from 'express';
+import { randomUUID } from 'crypto';
+import type { Request, Response } from 'express';
 import { AuthUncompleted, LocalAuthentication, Public } from '#/decorators';
 import { MailService } from '../../mail/mail.service';
 import { SessionService } from '../../session/session.service';
@@ -33,6 +35,7 @@ export class AuthController {
    @Public()
    async register(@Body() dto: RegisterUserDTO, @Req() req: Request) {
       const user = await this.authService.createUser(dto);
+      req.session.sid = randomUUID();
       const token = await this.tokenService.issueForEmailVerification(user.id);
       // await this.mailService.sendEmailVerification(user.email, user.username, token);
 
@@ -47,14 +50,16 @@ export class AuthController {
    @Public()
    async login(@Req() req: Request) {
       const user = await this.accountService.findByID(req.user.id);
+      req.session.sid = randomUUID();
       return new UserDTO(user);
    }
 
    @Post('logout')
    @AuthUncompleted()
-   async logout(@Req() req: Request) {
-      req.logOut(() => {});
-      return true;
+   async logout(@Req() req: Request, @Res() res: Response) {
+      req.logOut(() => {
+         res.status(HttpStatus.OK).send(true);
+      });
    }
 
    @Post('email/verify')

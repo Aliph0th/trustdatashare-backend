@@ -24,6 +24,7 @@ export type SessionUser = {
 };
 
 export type ActiveSession = {
+   sid: string;
    metadata: SessionMetadata;
    createdAt: Date;
 };

@@ -36,8 +36,7 @@ export class AccountController {
       if (!user) {
          throw new NotFoundException('User not found');
       }
-      const sessions = await this.sessionService.findSessions(req);
-      return new UserDTO({ ...user, sessions });
+      return new UserDTO(user);
    }
 
    @Patch('me')
