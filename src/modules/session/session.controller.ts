@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Req } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Req } from '@nestjs/common';
 import type { Request } from 'express';
-import { DeleteSessionsDTO } from './dto/delete-session.dto';
+import { UuidDTO } from '#/dto';
 import { SessionService } from './session.service';
 
 @Controller('sessions')
@@ -13,9 +13,9 @@ export class SessionController {
       return sessions;
    }
 
-   @Delete()
-   async deleteSessions(@Body() dto: DeleteSessionsDTO, @Req() req: Request) {
-      await this.sessionService.terminateSessions(dto.sessions, req);
+   @Delete('/:id')
+   async deleteSessions(@Param('id') { id }: UuidDTO, @Req() req: Request) {
+      await this.sessionService.terminateSession(id, req);
       return true;
    }
 }

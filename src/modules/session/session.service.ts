@@ -47,20 +47,16 @@ export class SessionService {
       };
    }
 
-   async terminateSessions(sessions: string[], req: Request) {
-      if (sessions.includes(req.session.sid)) {
+   async terminateSession(id: string, req: Request) {
+      if (req.session.sid === id) {
          throw new BadRequestException('You cannot terminate current session');
       }
       const activeSessions = await this.getUserSessions(req.user.id);
-      const ids = [];
-      for (const id of sessions) {
-         const session = activeSessions.find(active => active.sid === id);
-         if (!session) {
-            throw new NotFoundException(`Session with id ${id} not found`);
-         }
-         ids.push(session.key);
+      const session = activeSessions.find(session => session.sid === id);
+      if (!session) {
+         throw new NotFoundException('Session not found');
       }
-      await this.redisService.del(...ids);
+      await this.redisService.del(session.key);
    }
 
    private async getUserSessions(userID: number) {
