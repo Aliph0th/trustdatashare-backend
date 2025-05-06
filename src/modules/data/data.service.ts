@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import type { Request } from 'express';
 import type { Prisma } from '@prisma/client';
+import { getPostsFromUser } from '@prisma/client/sql';
 import { DATA_SALT_ROUNDS, MAX_GUEST_DATA_TTL } from '#/constants';
 import '#/constants/api.constants';
 import { KmsService } from '../kms/kms.service';
@@ -91,6 +92,13 @@ export class DataService {
       return { data, content: plain.plaintext };
    }
 
+   async getUserPosts(page: number, limit: number, userID: number) {
+      const userPosts = await this.prisma.$queryRawTyped(getPostsFromUser(userID, page, limit));
+      const total = userPosts?.[0]?.total || 0;
+      const hasMore = (page + 1) * limit < total;
+      return { data: userPosts.map(({ total: _, ...post }) => post), hasMore };
+   }
+
    async patch(id: string, dto: UpdateDataDTO, userID?: number) {
       if (Object.keys(dto).length === 0) {
          throw new BadRequestException('You should specify at least one update');
@@ -123,5 +131,21 @@ export class DataService {
       });
 
       return { data: updated, content };
+   }
+
+   async delete(id: string, userID: number) {
+      const data = await this.prisma.data.findUnique({
+         where: { id },
+         include: { owner: { select: { id: true } } }
+      });
+      const isExpired = new Date(data?.createdAt).getTime() + data?.ttl * 1000 < Date.now();
+      if (!data || (data?.ttl > 0 && isExpired)) {
+         throw new NotFoundException();
+      }
+      if (data.owner.id !== userID) {
+         throw new ForbiddenException();
+      }
+
+      await this.prisma.data.delete({ where: { id } });
    }
 }
