@@ -20,7 +20,6 @@ export type SessionMetadata = {
 export type SessionUser = {
    id: number;
    isEmailVerified: boolean;
-   isPremium: boolean;
 };
 
 export type ActiveSession = {

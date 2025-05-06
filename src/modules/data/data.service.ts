@@ -27,10 +27,6 @@ export class DataService {
    ) {}
 
    async create({ content, description, password, title, ttl, hideOwner }: CreateDataDTO, request?: Request) {
-      if (hideOwner && !request?.user?.isPremium) {
-         throw new ForbiddenException('You are not allowed to hide yourself without premium');
-      }
-
       const userID = request?.user?.id;
       const fileID = randomUUID();
       const encrypted = await this.kmsService.encrypt(content, { fileID });
@@ -45,6 +41,7 @@ export class DataService {
          id: fileID,
          description,
          title,
+         isOwnerHidden: hideOwner,
          ttl: userID ? ttl : Math.min(ttl, MAX_GUEST_DATA_TTL)
       };
       if (userID) {
@@ -56,14 +53,14 @@ export class DataService {
 
       return await this.prisma.data.create({
          data: instance,
-         include: { owner: { select: { id: true, username: true, isPremium: true } } }
+         include: { owner: { select: { id: true, username: true } } }
       });
    }
 
    async getByID(id: string, authorization?: string) {
       const data = await this.prisma.data.findUnique({
          where: { id },
-         include: { owner: { select: { id: true, username: true, isPremium: true } } }
+         include: { owner: { select: { id: true, username: true } } }
       });
 
       const [prefix, password] = authorization?.split(' ') || [];
@@ -127,7 +124,7 @@ export class DataService {
             ...updates,
             updatedAt: new Date()
          },
-         include: { owner: { select: { id: true, username: true, isPremium: true } } }
+         include: { owner: { select: { id: true, username: true } } }
       });
 
       return { data: updated, content };

@@ -39,7 +39,7 @@ export class AuthController {
       const token = await this.tokenService.issueForEmailVerification(user.id);
       // await this.mailService.sendEmailVerification(user.email, user.username, token);
 
-      this.sessionService.applySessionMetadata(req, { id: user.id, isEmailVerified: false, isPremium: false });
+      this.sessionService.applySessionMetadata(req, { id: user.id, isEmailVerified: false });
 
       return new UserDTO(user);
    }

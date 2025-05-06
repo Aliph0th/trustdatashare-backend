@@ -16,7 +16,7 @@ WITH
             owner_id = $1
             AND (
                 ttl = -1
-                OR created_at + ttl * INTERVAL '1 second' > CURRENT_TIMESTAMP
+                OR created_at + ttl * INTERVAL '1 second' >= CURRENT_TIMESTAMP
             )
     )
 SELECT (
