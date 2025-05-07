@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { SessionModule } from '../../session/session.module';
+import { StorageModule } from '../../storage/storage.module';
 import { TokenModule } from '../../token/token.module';
 import { AccountController } from './account.controller';
 import { AccountService } from './account.service';
 
 @Module({
-   imports: [TokenModule, SessionModule],
+   imports: [TokenModule, StorageModule],
    controllers: [AccountController],
    providers: [AccountService],
    exports: [AccountService]

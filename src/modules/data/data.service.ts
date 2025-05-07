@@ -6,6 +6,7 @@ import {
    NotFoundException,
    UnauthorizedException
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '$/core/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
@@ -23,7 +24,8 @@ export class DataService {
    constructor(
       private readonly storageService: StorageService,
       private readonly prisma: PrismaService,
-      private readonly kmsService: KmsService
+      private readonly kmsService: KmsService,
+      private readonly configService: ConfigService
    ) {}
 
    async create({ content, description, password, title, ttl, hideOwner }: CreateDataDTO, request?: Request) {
@@ -33,7 +35,11 @@ export class DataService {
       if (!encrypted) {
          throw new InternalServerErrorException();
       }
-      await this.storageService.upload(encrypted.ciphertext, fileID);
+
+      await this.storageService.put(encrypted.ciphertext, {
+         file: fileID,
+         folder: this.configService.getOrThrow('S3_DATA_FOLDER')
+      });
       if (!userID && ttl === -1) {
          ttl = MAX_GUEST_DATA_TTL;
       }
@@ -81,8 +87,11 @@ export class DataService {
          }
       }
 
-      const encrypted = (await this.storageService.get(data.id)).toString();
-      const plain = await this.kmsService.decrypt(encrypted, { fileID: data.id });
+      const encrypted = await this.storageService.get({
+         file: data.id,
+         folder: this.configService.getOrThrow('S3_DATA_FOLDER')
+      });
+      const plain = await this.kmsService.decrypt(encrypted.toString(), { fileID: data.id });
       if (!plain) {
          throw new InternalServerErrorException();
       }
@@ -115,7 +124,10 @@ export class DataService {
       const { content, ...updates } = dto;
 
       if (content) {
-         await this.storageService.upload(content, data.id);
+         await this.storageService.put(content, {
+            file: data.id,
+            folder: this.configService.getOrThrow('S3_DATA_FOLDER')
+         });
       }
 
       const updated = await this.prisma.data.update({

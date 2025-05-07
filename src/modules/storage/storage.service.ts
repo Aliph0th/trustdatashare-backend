@@ -3,8 +3,13 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { stringify as UriEncode } from 'qs';
+import { S3Authorization, StorageOptions } from '#/types';
 import { getFormatDate, getISODate } from '#/utils';
-import { S3Authorization } from '../../../libs/common/src/types';
+
+const MIMES: Record<StorageOptions['ext'], string> = {
+   txt: 'text/plain',
+   webp: 'image/webp'
+};
 
 @Injectable()
 export class StorageService {
@@ -13,8 +18,8 @@ export class StorageService {
       private readonly http: HttpService
    ) {}
 
-   async get(file: string) {
-      const resource = `${this.configService.getOrThrow('S3_FOLDER')}/${file}.txt`;
+   async get({ file, folder, ext = 'txt' }: StorageOptions) {
+      const resource = `${folder}/${file}.${ext}`;
       const payloadHash = this.SHA256('', 'hex');
       const headers: Record<string, string | number> = {
          host: this.host,
@@ -34,8 +39,8 @@ export class StorageService {
       return data;
    }
 
-   async delete(file: string) {
-      const resource = `${this.configService.getOrThrow('S3_FOLDER')}/${file}.txt`;
+   async delete({ file, folder, ext = 'txt' }: StorageOptions) {
+      const resource = `${folder}/${file}.${ext}`;
       const payloadHash = this.SHA256('', 'hex');
       const headers: Record<string, string | number> = {
          host: this.host,
@@ -54,29 +59,49 @@ export class StorageService {
       return file;
    }
 
-   async upload(content: string, id?: string) {
-      const file = Buffer.from(content, 'utf-8');
-      const payloadHash = this.SHA256(file || '', 'hex');
-      const fileID = id || crypto.randomUUID();
-      const resource = `/${this.configService.getOrThrow('S3_FOLDER')}/${fileID}.txt`;
+   async put(
+      content: string | Buffer,
+      { file, folder, ext = 'txt' }: StorageOptions,
+      acl: 'private' | 'public-read' = 'private'
+   ) {
+      const buffer = typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
+      const payloadHash = this.SHA256(buffer || '', 'hex');
+      const resource = `${folder}/${file}.${ext}`;
       const headers: Record<string, string | number> = {
-         'Content-Length': file.byteLength,
-         'Content-Type': 'text/plain',
+         'Content-Length': buffer.byteLength,
+         'Content-Type': MIMES[ext],
          host: this.host,
          'x-amz-content-sha256': payloadHash,
          'x-amz-date': getISODate(),
-         'x-amz-storage-class': 'STANDARD'
+         'x-amz-storage-class': 'STANDARD',
+         'x-amz-acl': acl
       };
+
       const authorization = this.signAuthorization({
          method: 'PUT',
          payloadHash,
          resource,
          headers
       });
-      await this.http.axiosRef.put(resource, file, {
+      // const a = new RequestSigner(
+      //    {
+      //       host: this.host,
+      //       headers,
+      //       method: 'PUT',
+      //       region: 'ru-msk',
+      //       path: resource,
+      //       body: buffer,
+      //       service: 's3'
+      //    },
+      //    { accessKeyId: '4AAUkUAmkaEWt7a8E1AvFi', secretAccessKey: 'eRjXS9MP1QXR6BDvsTSjGtWWVwcqKRbQMxowck8mnyV' }
+      // );
+      // console.log('canon aws\n', a.canonicalHeaders());
+      // console.log('sign aws\n', a.signedHeaders());
+      // console.log('my', authorization);
+      await this.http.axiosRef.put(resource, buffer, {
          headers: { ...headers, Authorization: authorization }
       });
-      return fileID;
+      return file;
    }
 
    private signAuthorization({ method, headers, resource, payloadHash, query = {} }: S3Authorization) {
@@ -84,13 +109,9 @@ export class StorageService {
       const stringToSign = this.getStringToSign(canonicalRequest);
 
       const credential = `${this.configService.getOrThrow('S3_ACCESS_KEY')}/${getFormatDate()}/${this.configService.getOrThrow('S3_REGION')}/s3/aws4_request`;
-      const signedHeaders = Object.keys(headers)
-         .map(header => header.toLowerCase())
-         .sort()
-         .join(';');
       const signature = this.getSignature(stringToSign);
 
-      const header = `AWS4-HMAC-SHA256 Credential=${credential},SignedHeaders=${signedHeaders},Signature=${signature}`;
+      const header = `AWS4-HMAC-SHA256 Credential=${credential},SignedHeaders=${this.getSignedHeaders(headers)},Signature=${signature}`;
       return header;
    }
 
@@ -107,12 +128,10 @@ export class StorageService {
             canonical.push(`${key.toLowerCase()}:${typeof value === 'string' ? value.trim() : value}`);
             return canonical;
          }, [] as string[])
-         .join('\n');
-      const signedHeaders = Object.keys(headers)
-         .map(header => header.toLowerCase())
          .sort()
-         .join(';');
-      const request = `${method}\n${resource}\n${UriEncode(query, { format: 'RFC3986' })}\n${canonicalHeaders}\n\n${signedHeaders}\n${payloadHash}`;
+         .join('\n');
+
+      const request = `${method}\n${resource}\n${UriEncode(query, { format: 'RFC3986' })}\n${canonicalHeaders}\n\n${this.getSignedHeaders(headers)}\n${payloadHash}`;
       return this.SHA256(request, 'hex');
    }
 
@@ -129,6 +148,13 @@ export class StorageService {
       const dateRegionServiceKey = this.HMACSHA256(dateRegionKey, 's3');
       const signingKey = this.HMACSHA256(dateRegionServiceKey, 'aws4_request');
       return signingKey;
+   }
+
+   private getSignedHeaders(headers: S3Authorization['headers']) {
+      return Object.keys(headers)
+         .map(header => header.toLowerCase())
+         .sort()
+         .join(';');
    }
 
    private get host() {
