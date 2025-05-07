@@ -13,7 +13,6 @@ export class DataDTO {
    owner?: {
       id: number;
       username: string;
-      isPremium: boolean;
    };
 
    @Exclude()

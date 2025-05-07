@@ -11,8 +11,8 @@ export class SessionSerializer extends PassportSerializer {
    constructor() {
       super();
    }
-   serializeUser({ id, isEmailVerified, isPremium }: User, done: SerializeFn) {
-      done(null, { id, isEmailVerified, isPremium });
+   serializeUser({ id, isEmailVerified }: User, done: SerializeFn) {
+      done(null, { id, isEmailVerified });
    }
 
    async deserializeUser(payload: SessionUser, done: DeserializeFn) {
