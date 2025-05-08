@@ -86,7 +86,11 @@ export class AccountService {
    async changeAvatar(file: Buffer, userID: number) {
       const user = await this.prisma.user.findUnique({ where: { id: userID } });
       if (user.avatar) {
-         await this.storage.delete({ file: user.avatar, folder: this.configService.getOrThrow('S3_AVATAR_FOLDER') });
+         await this.storage.delete({
+            file: user.avatar,
+            folder: this.configService.getOrThrow('S3_AVATAR_FOLDER'),
+            ext: 'webp'
+         });
       }
       const processedBuffer = await sharp(file).resize(AVATAR_SIZE, AVATAR_SIZE).webp({ effort: 3 }).toBuffer();
       const fileID = randomUUID();

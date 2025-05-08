@@ -1,5 +1,5 @@
 generator client {
-   provider = "prisma-client-js"
+   provider        = "prisma-client-js"
    previewFeatures = ["typedSql"]
 }
 
@@ -13,7 +13,7 @@ model User {
    email           String   @unique
    password        String
    username        String   @unique
-   avatar          String?
+   avatar          String?  @db.Uuid
    isEmailVerified Boolean  @default(false) @map("is_email_verified")
    createdAt       DateTime @default(now()) @map("created_at")
    updatedAt       DateTime @updatedAt @map("updated_at")
