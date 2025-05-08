@@ -37,7 +37,7 @@ export class AuthController {
       const user = await this.authService.createUser(dto);
       req.session.sid = randomUUID();
       const token = await this.tokenService.issueForEmailVerification(user.id);
-      // await this.mailService.sendEmailVerification(user.email, user.username, token);
+      await this.mailService.sendEmailVerification(user.email, user.username, token);
 
       this.sessionService.applySessionMetadata(req, { id: user.id, isEmailVerified: false });
 

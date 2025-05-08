@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import * as dotenv from 'dotenv';
 import * as dotenvExpand from 'dotenv-expand';
 import { DataModule } from '../modules/data/data.module';
@@ -24,7 +25,8 @@ dotenvExpand.expand(dotenv.config());
       AccountModule,
       AuthModule,
       SessionModule,
-      DataModule
+      DataModule,
+      ScheduleModule.forRoot()
    ]
 })
 export class CoreModule {}

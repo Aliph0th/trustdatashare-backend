@@ -51,6 +51,10 @@ export class AuthService {
    async resendEmail(userID: number) {
       await this.tokenService.revokeAll(userID, TokenType.EMAIL_VERIFICATION);
       const token = await this.tokenService.issueForEmailVerification(userID);
-      // await this.mailService.sendEmailVerification(user.email, user.username, token);
+      const { email, username } = await this.prisma.user.findUnique({
+         where: { id: userID },
+         select: { email: true, username: true }
+      });
+      await this.mailService.sendEmailVerification(email, username, token);
    }
 }

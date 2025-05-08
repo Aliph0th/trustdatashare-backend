@@ -3,16 +3,18 @@ import {
    ForbiddenException,
    Injectable,
    InternalServerErrorException,
+   Logger,
    NotFoundException,
    UnauthorizedException
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '$/core/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import type { Request } from 'express';
 import type { Prisma } from '@prisma/client';
-import { getPostsFromUser } from '@prisma/client/sql';
+import { deleteExpiredPosts, getPostsFromUser } from '@prisma/client/sql';
 import { DATA_SALT_ROUNDS, MAX_GUEST_DATA_TTL } from '#/constants';
 import '#/constants/api.constants';
 import { KmsService } from '../kms/kms.service';
@@ -156,5 +158,16 @@ export class DataService {
       }
 
       await this.prisma.data.delete({ where: { id } });
+   }
+
+   @Cron(CronExpression.EVERY_2_HOURS)
+   async deleteExpired() {
+      Logger.log('Deleting expired posts', DataService.name);
+      const ids = (await this.prisma.$queryRawTyped(deleteExpiredPosts())).map(data => data.id);
+      const promises = ids.map(id =>
+         this.storageService.delete({ file: id, folder: this.configService.getOrThrow('S3_DATA_FOLDER') })
+      );
+      await Promise.all(promises);
+      Logger.log(`Deleted ${ids.length} records`, DataService.name);
    }
 }
