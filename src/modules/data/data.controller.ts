@@ -14,10 +14,9 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { Public } from '#/decorators';
-import { UuidDTO } from '#/dto';
+import { NumericDTO, UuidDTO } from '#/dto';
 import { DataService } from './data.service';
-import { CreateDataDTO, DataDTO, UpdateDataDTO } from './dto';
-import { GetAllDataDTO } from './dto/get-all-data.dto';
+import { CreateDataDTO, DataDTO, GetAllDataDTO, UpdateDataDTO } from './dto';
 
 @Controller('data')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -32,8 +31,14 @@ export class DataController {
    }
 
    @Get('/my')
-   async getAllFromUser(@Query() { page, limit }: GetAllDataDTO, @Req() req: Request) {
+   async getAllMy(@Query() { page, limit }: GetAllDataDTO, @Req() req: Request) {
       return await this.dataService.getUserPosts(page, limit, req.user.id);
+   }
+
+   @Get('/visible/:id')
+   @Public()
+   async getAllFromUser(@Param() { id }: NumericDTO, @Query() { page, limit }: GetAllDataDTO) {
+      return await this.dataService.getUserPosts(page, limit, id, true);
    }
 
    @Delete('/:id')

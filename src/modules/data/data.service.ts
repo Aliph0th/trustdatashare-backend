@@ -98,8 +98,8 @@ export class DataService {
       return { data, content: plain.plaintext };
    }
 
-   async getUserPosts(page: number, limit: number, userID: number) {
-      const userPosts = await this.prisma.$queryRawTyped(getPostsFromUser(userID, page * limit, limit));
+   async getUserPosts(page: number, limit: number, userID: number, visibleOnly = false) {
+      const userPosts = await this.prisma.$queryRawTyped(getPostsFromUser(userID, page * limit, limit, visibleOnly));
       const total = userPosts?.[0]?.total || 0;
       const hasMore = (page + 1) * limit < total;
       return { data: userPosts.map(({ total: _, ...post }) => post), hasMore };

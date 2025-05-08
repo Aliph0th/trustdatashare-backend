@@ -4,6 +4,7 @@ import {
    Controller,
    Get,
    NotFoundException,
+   Param,
    Patch,
    Query,
    Req,
@@ -13,8 +14,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 import { AuthUncompleted, Public } from '#/decorators';
+import { NumericDTO } from '#/dto';
 import { AccountService } from './account.service';
-import { PatchUserDTO, UserCredentialsDTO, UserDTO } from './dto';
+import { PatchUserDTO, PublicUserDTO, UserCredentialsDTO, UserDTO } from './dto';
 import { FileValidationPipe } from './validators';
 
 @Controller('users')
@@ -36,6 +38,16 @@ export class AccountController {
          throw new NotFoundException('User not found');
       }
       return new UserDTO(user);
+   }
+
+   @Get('/:id')
+   @Public()
+   async getUser(@Param() { id }: NumericDTO) {
+      const user = await this.accountService.findByID(id);
+      if (!user) {
+         throw new NotFoundException('User not found');
+      }
+      return new PublicUserDTO(user);
    }
 
    @Patch('me')
