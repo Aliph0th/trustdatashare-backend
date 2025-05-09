@@ -24,7 +24,11 @@ export class SessionService {
       request.session.createdAt = new Date();
       request.session.metadata = this.getSessionMetadata(request);
       if (user) {
-         request.session.user = user;
+         if (request.session.passport) {
+            request.session.passport.user = user;
+         } else {
+            request.session.passport ??= { user };
+         }
       }
    }
 

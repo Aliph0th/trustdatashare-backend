@@ -7,6 +7,9 @@ declare module 'express-session' {
       createdAt: Date;
       metadata: SessionMetadata;
       sid: string;
+      passport: {
+         user: SessionUser;
+      };
    }
 }
 
