@@ -43,7 +43,7 @@ export class AuthService {
    }
 
    async verifyEmail(token: string, request: Request) {
-      const id = await this.tokenService.useToken(token, TokenType.EMAIL_VERIFICATION);
+      const id = await this.tokenService.useToken(token, request.user.id, TokenType.EMAIL_VERIFICATION);
       await this.accountService.setVerifiedEmail(id);
       request.user.isEmailVerified = true;
    }

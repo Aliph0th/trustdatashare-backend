@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomUUID } from 'crypto';
 import { Prisma, TokenType } from '@prisma/client';
 import { EMAIL_VERIFICATION_TOKEN_TTL } from '#/constants';
@@ -25,17 +26,13 @@ export class TokenService {
       await this.prisma.token.deleteMany({ where: { userID, type } });
    }
 
-   async useToken(token: string, type: TokenType) {
+   async useToken(token: string, userID: number, type: TokenType) {
       const existingToken = await this.prisma.token.findUnique({
          where: { token, type }
       });
-      if (!existingToken) {
+      const isExpired = new Date(existingToken?.expires) < new Date();
+      if (!existingToken || isExpired || existingToken?.userID !== userID) {
          throw new NotFoundException('Token not found');
-      }
-
-      const isExpired = new Date(existingToken.expires) < new Date();
-      if (isExpired) {
-         throw new BadRequestException('Token is expired');
       }
 
       await this.delete({ id: existingToken.id, type });
@@ -45,5 +42,12 @@ export class TokenService {
 
    async delete(where: Prisma.TokenWhereUniqueInput) {
       await this.prisma.token.delete({ where });
+   }
+
+   @Cron(CronExpression.EVERY_30_MINUTES)
+   async deleteExpired() {
+      Logger.log('Deleting expired tokens', TokenService.name);
+      const { count } = await this.prisma.token.deleteMany({ where: { expires: { lt: new Date() } } });
+      Logger.log(`Deleted ${count} records`, TokenService.name);
    }
 }
