@@ -83,21 +83,6 @@ export class StorageService {
          resource,
          headers
       });
-      // const a = new RequestSigner(
-      //    {
-      //       host: this.host,
-      //       headers,
-      //       method: 'PUT',
-      //       region: 'ru-msk',
-      //       path: resource,
-      //       body: buffer,
-      //       service: 's3'
-      //    },
-      //    { accessKeyId: '4AAUkUAmkaEWt7a8E1AvFi', secretAccessKey: 'eRjXS9MP1QXR6BDvsTSjGtWWVwcqKRbQMxowck8mnyV' }
-      // );
-      // console.log('canon aws\n', a.canonicalHeaders());
-      // console.log('sign aws\n', a.signedHeaders());
-      // console.log('my', authorization);
       await this.http.axiosRef.put(resource, buffer, {
          headers: { ...headers, Authorization: authorization }
       });

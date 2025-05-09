@@ -49,8 +49,8 @@ export class DataController {
 
    @Get('/:id')
    @Public()
-   async get(@Param() { id }: UuidDTO, @Headers('Authorization') auth?: string) {
-      const { data, content } = await this.dataService.getByID(id, auth);
+   async get(@Param() { id }: UuidDTO, @Req() req: Request, @Headers('Authorization') auth?: string) {
+      const { data, content } = await this.dataService.getByID(id, req?.user?.id, auth);
       const owner = data.isOwnerHidden ? null : data.owner;
       return new DataDTO({ ...data, isPublic: !data.password, owner, content });
    }

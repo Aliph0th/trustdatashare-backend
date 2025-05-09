@@ -65,7 +65,7 @@ export class DataService {
       });
    }
 
-   async getByID(id: string, authorization?: string) {
+   async getByID(id: string, userID?: number, authorization?: string) {
       const data = await this.prisma.data.findUnique({
          where: { id },
          include: { owner: { select: { id: true, username: true } } }
@@ -76,16 +76,16 @@ export class DataService {
       if (!data || (data?.ttl > 0 && isExpired)) {
          throw new NotFoundException();
       }
-      if (data.password) {
+      if (data.password && data.ownerID !== userID) {
          if (!prefix || !password) {
-            throw new UnauthorizedException();
+            throw new UnauthorizedException('No password provided');
          }
          if (prefix?.toLowerCase() !== 'basic') {
             throw new UnauthorizedException('Invalid authorization header prefix');
          }
          const isCorrect = await bcrypt.compare(password || '', data.password);
          if (!isCorrect) {
-            throw new UnauthorizedException();
+            throw new UnauthorizedException('Invalid password');
          }
       }
 
