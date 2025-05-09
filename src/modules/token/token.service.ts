@@ -46,8 +46,7 @@ export class TokenService {
 
    @Cron(CronExpression.EVERY_30_MINUTES)
    async deleteExpired() {
-      Logger.log('Deleting expired tokens', TokenService.name);
       const { count } = await this.prisma.token.deleteMany({ where: { expires: { lt: new Date() } } });
-      Logger.log(`Deleted ${count} records`, TokenService.name);
+      Logger.log(`Deleting expired tokens: affected ${count} rows`, TokenService.name);
    }
 }

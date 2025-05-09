@@ -8,5 +8,6 @@ export const METADATA = {
 };
 
 export const REDIS_KEYS = {
-   IAM_TOKEN: 'YC_IAM'
+   IAM_TOKEN: 'YC_IAM',
+   COOLDOWN_EMAIL_VERIFY_RESEND: (id: number) => `CD_EMAIL_VERIFY_RESEND:${id}`
 };

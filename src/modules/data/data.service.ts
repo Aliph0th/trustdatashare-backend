@@ -162,12 +162,11 @@ export class DataService {
 
    @Cron(CronExpression.EVERY_2_HOURS)
    async deleteExpired() {
-      Logger.log('Deleting expired posts', DataService.name);
       const ids = (await this.prisma.$queryRawTyped(deleteExpiredPosts())).map(data => data.id);
       const promises = ids.map(id =>
          this.storageService.delete({ file: id, folder: this.configService.getOrThrow('S3_DATA_FOLDER') })
       );
       await Promise.all(promises);
-      Logger.log(`Deleted ${ids.length} records`, DataService.name);
+      Logger.log(`Deleting expired posts: affected ${ids.length} rows`, DataService.name);
    }
 }
