@@ -17,6 +17,7 @@ import type { Prisma } from '@prisma/client';
 import { deleteExpiredPosts, getPostsFromUser } from '@prisma/client/sql';
 import { DATA_SALT_ROUNDS, MAX_GUEST_DATA_TTL } from '#/constants';
 import '#/constants/api.constants';
+import { RedisService } from '../../core/redis/redis.service';
 import { KmsService } from '../kms/kms.service';
 import { StorageService } from '../storage/storage.service';
 import type { CreateDataDTO, UpdateDataDTO } from './dto';
@@ -27,7 +28,8 @@ export class DataService {
       private readonly storageService: StorageService,
       private readonly prisma: PrismaService,
       private readonly kmsService: KmsService,
-      private readonly configService: ConfigService
+      private readonly configService: ConfigService,
+      private readonly redis: RedisService
    ) {}
 
    async create({ content, description, password, title, ttl, hideOwner }: CreateDataDTO, request?: Request) {
@@ -54,6 +56,12 @@ export class DataService {
       };
       if (userID) {
          instance.owner = { connect: { id: userID } };
+
+         const prefix = `/api/v${this.configService.getOrThrow('ACTUAL_VERSION')}`;
+         await this.redis.invalidate(`${prefix}/data/my|${userID}|`);
+         if (!hideOwner) {
+            await this.redis.invalidate(`${prefix}/data/visible/${userID}`);
+         }
       }
       if (password) {
          instance.password = await bcrypt.hash(password, DATA_SALT_ROUNDS);

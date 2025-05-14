@@ -23,7 +23,6 @@ import { CreateDataDTO, DataDTO, GetAllDataDTO, UpdateDataDTO } from './dto';
 export class DataController {
    constructor(private readonly dataService: DataService) {}
 
-   //TODO: (/my + /visible)
    @Post()
    @Public()
    async create(@Body() dto: CreateDataDTO, @Req() req: Request) {
@@ -46,7 +45,7 @@ export class DataController {
 
    @Get('/:id')
    @Public()
-   @Cached({ threshold: 1, ttl: 5 * 60, userSensitive: false })
+   @Cached({ threshold: 3, ttl: 5 * 60, userSensitive: false })
    async get(@Param() { id }: UuidDTO, @Req() req: Request, @Headers('Authorization') auth?: string) {
       const { data, content } = await this.dataService.getByID(id, req?.user?.id, auth);
       const owner = data.isOwnerHidden ? null : data.owner;

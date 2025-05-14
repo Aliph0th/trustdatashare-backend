@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '$/core/prisma/prisma.service';
+import { RedisService } from '$/core/redis/redis.service';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import * as sharp from 'sharp';
@@ -14,7 +15,8 @@ export class AccountService {
    constructor(
       private readonly prisma: PrismaService,
       private readonly storage: StorageService,
-      private readonly configService: ConfigService
+      private readonly configService: ConfigService,
+      private readonly redis: RedisService
    ) {}
 
    async isCredentialsAvailable({ email, username }: UserCredentialsDTO) {
@@ -52,7 +54,7 @@ export class AccountService {
       return this.prisma.user.findUnique({ where: { id } });
    }
 
-   async patch(id: number, dto: PatchUserDTO) {
+   async patch(userID: number, dto: PatchUserDTO) {
       if (Object.keys(dto).length === 0) {
          throw new BadRequestException('You should specify at least one update');
       }
@@ -61,8 +63,9 @@ export class AccountService {
          updates.password = await bcrypt.hash(updates.password, USER_SALT_ROUNDS);
       }
       try {
+         await this.redis.invalidate(`/api/v${this.configService.getOrThrow('ACTUAL_VERSION')}/users/${userID}`);
          return await this.prisma.user.update({
-            where: { id },
+            where: { id: userID },
             data: updates
          });
       } catch (error) {
@@ -106,6 +109,7 @@ export class AccountService {
       );
 
       await this.prisma.user.update({ where: { id: userID }, data: { avatar: fileID } });
+      await this.redis.invalidate(`/api/v${this.configService.getOrThrow('ACTUAL_VERSION')}/users/${userID}`);
 
       return {
          url: new URL(

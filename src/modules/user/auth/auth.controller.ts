@@ -35,7 +35,6 @@ export class AuthController {
 
    @Post('register')
    @Public()
-   //TODO: availability
    async register(@Body() dto: RegisterUserDTO, @Req() req: Request) {
       const user = await this.authService.createUser(dto);
       req.session.sid = randomUUID();

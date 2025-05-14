@@ -5,7 +5,7 @@ import type { Request } from 'express';
 import { Observable } from 'rxjs';
 import { METADATA } from '../constants';
 import { InvalidateMetadata } from '../types';
-import { hashRequest } from '../utils';
+import { buildCacheKey } from '../utils';
 
 @Injectable()
 export class InvalidateInterceptor implements NestInterceptor {
@@ -21,19 +21,20 @@ export class InvalidateInterceptor implements NestInterceptor {
          context.getHandler()
       );
 
-      let hash = '';
       let pathname = path;
       const match = path.matchAll(/<(?<param>\w+)>/g).next().value;
       const paramName = match?.groups?.param;
       if (match && params[paramName]) {
          pathname = pathname.replace(match[0], params[paramName]);
       }
-      if (query || body) {
-         hash = hashRequest(query, body);
-      }
+
       await this.redis.invalidate(
-         `/api/v${version}${pathname.startsWith('/') ? '' : '/'}${pathname}${hash}`,
-         userSensitive ? user?.id : null
+         buildCacheKey({
+            path: `/api/v${version}${pathname.startsWith('/') ? '' : '/'}${pathname}`,
+            userID: userSensitive ? user?.id : null,
+            query,
+            body
+         })
       );
 
       return next.handle();

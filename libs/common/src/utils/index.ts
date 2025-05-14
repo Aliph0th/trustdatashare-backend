@@ -16,5 +16,9 @@ export const buildCacheKey = ({
    body?: unknown;
    userID?: number;
 }) => {
-   return `${path}|${userID ? userID : ''}|${hashRequest(query, body)}`;
+   let hash = '';
+   if (query || body) {
+      hash = hashRequest(query, body);
+   }
+   return `${path}|${userID ? userID : ''}|${hash}`;
 };

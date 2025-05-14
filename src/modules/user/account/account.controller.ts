@@ -54,7 +54,7 @@ export class AccountController {
    }
 
    @Patch('me')
-   @Invalidate({ path: 'users/me' }) //TODO:'users/*'
+   @Invalidate({ path: 'users/me' })
    async patchMe(@Body() dto: PatchUserDTO, @Req() req: Request) {
       const user = await this.accountService.patch(req.user?.id, dto);
       return new UserDTO(user);
@@ -62,7 +62,7 @@ export class AccountController {
 
    @Patch('avatar')
    @UseInterceptors(FileInterceptor('file'))
-   @Invalidate({ path: 'users/me' }) //TODO:'users/*'
+   @Invalidate({ path: 'users/me' })
    async changeAvatar(@UploadedFile(new FileValidationPipe()) file: Express.Multer.File, @Req() req: Request) {
       return await this.accountService.changeAvatar(file.buffer, req.user.id);
    }

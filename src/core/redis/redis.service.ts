@@ -25,11 +25,10 @@ export class RedisService extends Redis {
       return await this.get(REDIS_KEYS.RESOURCE(id));
    }
 
-   async invalidate(path: string, userID?: number) {
-      const key = `${path}|${userID ? userID : ''}|*`;
+   async invalidate(path: string) {
       const [[_, resource], [__, requests]] = await this.multi()
-         .keys(`${REDIS_KEYS.RESOURCE(key)}`)
-         .keys(`${REDIS_KEYS.REQUEST_COUNT(key)}`)
+         .keys(`${REDIS_KEYS.RESOURCE(path)}*`)
+         .keys(`${REDIS_KEYS.REQUEST_COUNT(path)}*`)
          .exec();
       const keys = [...(resource as string[]), ...(requests as string[])];
       if (keys.length > 0) {
