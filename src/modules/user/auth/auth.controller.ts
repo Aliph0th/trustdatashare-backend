@@ -12,7 +12,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import type { Request } from 'express';
-import { AuthUncompleted, LocalAuthentication, Public } from '#/decorators';
+import { AuthUncompleted, Invalidate, LocalAuthentication, Public } from '#/decorators';
 import { MailService } from '../../mail/mail.service';
 import { SessionService } from '../../session/session.service';
 import { TokenService } from '../../token/token.service';
@@ -35,6 +35,7 @@ export class AuthController {
 
    @Post('register')
    @Public()
+   //TODO: availability
    async register(@Body() dto: RegisterUserDTO, @Req() req: Request) {
       const user = await this.authService.createUser(dto);
       req.session.sid = randomUUID();
@@ -58,6 +59,7 @@ export class AuthController {
    @Post('login')
    @HttpCode(HttpStatus.OK)
    @Public()
+   @Invalidate({ path: 'sessions/me' })
    async login(@Req() req: Request) {
       const user = await this.accountService.findByID(req.user.id);
       req.session.sid = randomUUID();
@@ -67,6 +69,7 @@ export class AuthController {
    @Post('logout')
    @HttpCode(HttpStatus.OK)
    @AuthUncompleted()
+   @Invalidate({ path: 'sessions/me' })
    async logout(@Req() req: Request) {
       return new Promise((resolve, reject) => {
          req.session.destroy(err => {
@@ -82,6 +85,7 @@ export class AuthController {
    @Post('email/verify')
    @HttpCode(HttpStatus.OK)
    @AuthUncompleted()
+   @Invalidate({ path: 'users/me' })
    async verifyEmail(@Body() dto: EmailVerifyDTO, @Req() req: Request) {
       await this.authService.verifyEmail(dto.token, req);
       return true;

@@ -13,7 +13,7 @@ import {
    UseInterceptors
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { Public } from '#/decorators';
+import { Cached, Invalidate, Public } from '#/decorators';
 import { NumericDTO, UuidDTO } from '#/dto';
 import { DataService } from './data.service';
 import { CreateDataDTO, DataDTO, GetAllDataDTO, UpdateDataDTO } from './dto';
@@ -23,6 +23,7 @@ import { CreateDataDTO, DataDTO, GetAllDataDTO, UpdateDataDTO } from './dto';
 export class DataController {
    constructor(private readonly dataService: DataService) {}
 
+   //TODO: (/my + /visible)
    @Post()
    @Public()
    async create(@Body() dto: CreateDataDTO, @Req() req: Request) {
@@ -31,31 +32,36 @@ export class DataController {
    }
 
    @Get('/my')
+   @Cached({ threshold: 1, ttl: 10 * 60 })
    async getAllMy(@Query() { page, limit }: GetAllDataDTO, @Req() req: Request) {
       return await this.dataService.getUserPosts(page, limit, req.user.id);
    }
 
    @Get('/visible/:id')
    @Public()
+   @Cached({ threshold: 1, ttl: 10 * 60, userSensitive: false })
    async getAllFromUser(@Param() { id }: NumericDTO, @Query() { page, limit }: GetAllDataDTO) {
       return await this.dataService.getUserPosts(page, limit, id, true);
    }
 
-   @Delete('/:id')
-   async deleteData(@Param() { id }: UuidDTO, @Req() req: Request) {
-      await this.dataService.delete(id, req.user.id);
-      return true;
-   }
-
    @Get('/:id')
    @Public()
+   @Cached({ threshold: 1, ttl: 5 * 60, userSensitive: false })
    async get(@Param() { id }: UuidDTO, @Req() req: Request, @Headers('Authorization') auth?: string) {
       const { data, content } = await this.dataService.getByID(id, req?.user?.id, auth);
       const owner = data.isOwnerHidden ? null : data.owner;
       return new DataDTO({ ...data, isPublic: !data.password, owner, content });
    }
 
+   @Delete('/:id')
+   @Invalidate({ path: 'data/<id>', userSensitive: false })
+   async deleteData(@Param() { id }: UuidDTO, @Req() req: Request) {
+      await this.dataService.delete(id, req.user.id);
+      return true;
+   }
+
    @Patch('/:id')
+   @Invalidate({ path: 'data/<id>', userSensitive: false })
    async patch(@Param() { id }: UuidDTO, @Body() dto: UpdateDataDTO, @Req() req: Request) {
       const { data, content } = await this.dataService.patch(id, dto, req.user?.id);
       const owner = data.isOwnerHidden ? null : data.owner;
