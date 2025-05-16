@@ -78,6 +78,14 @@ export class AccountService {
       }
    }
 
+   async updatePassword(userID: number, password: string) {
+      const hashedPassword = await bcrypt.hash(password, USER_SALT_ROUNDS);
+      await this.prisma.user.update({
+         where: { id: userID },
+         data: { password: hashedPassword }
+      });
+   }
+
    async find(where: Prisma.UserWhereInput) {
       return this.prisma.user.findFirst({ where });
    }

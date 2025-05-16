@@ -6,7 +6,12 @@ module.exports = {
       sourceType: 'module'
    },
    plugins: ['@typescript-eslint/eslint-plugin'],
-   extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
+   extends: ['plugin:react/recommended', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
+   settings: {
+      react: {
+         version: 'detect'
+      }
+   },
    root: true,
    env: {
       node: true,

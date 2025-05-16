@@ -85,7 +85,7 @@ export class SessionService {
       return sessions;
    }
 
-   private getSessionMetadata(request: Request): SessionMetadata {
+   getSessionMetadata(request: Request): SessionMetadata {
       const isDev = this.configService.get('NODE_ENV') === 'development';
       const ip = isDev ? '104.174.125.138' : requestIP.getClientIp(request) || 'Undefined IP';
       const location = lookup(ip);

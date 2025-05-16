@@ -7,19 +7,23 @@ import {
    InternalServerErrorException,
    Post,
    Req,
+   UseGuards,
    UseInterceptors
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import type { Request } from 'express';
+import { TokenType } from '@prisma/client';
 import { AuthUncompleted, Invalidate, LocalAuthentication, Public } from '#/decorators';
+import { EMAIL_VERIFICATION_TOKEN_TTL } from '../../../../libs/common/src/constants';
+import { UnauthenticatedGuard } from '../../../../libs/common/src/guards';
 import { MailService } from '../../mail/mail.service';
 import { SessionService } from '../../session/session.service';
 import { TokenService } from '../../token/token.service';
 import { AccountService } from '../account/account.service';
 import { UserDTO } from '../account/dto';
 import { AuthService } from './auth.service';
-import { EmailVerifyDTO, RegisterUserDTO } from './dto';
+import { EmailVerifyDTO, PasswordResetDTO, PasswordUpdateDTO, RegisterUserDTO } from './dto';
 
 @Controller('auth')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -38,7 +42,7 @@ export class AuthController {
    async register(@Body() dto: RegisterUserDTO, @Req() req: Request) {
       const user = await this.authService.createUser(dto);
       req.session.sid = randomUUID();
-      const token = await this.tokenService.issueForEmailVerification(user.id);
+      const token = await this.tokenService.issue(user.id, TokenType.EMAIL_VERIFICATION, EMAIL_VERIFICATION_TOKEN_TTL);
       await this.mailService.sendEmailVerification(user.email, user.username, token);
       const sessionUser = { id: user.id, isEmailVerified: user.isEmailVerified };
       await new Promise((resolve, reject) => {
@@ -94,7 +98,25 @@ export class AuthController {
    @HttpCode(HttpStatus.OK)
    @AuthUncompleted()
    async resendEmail(@Req() req: Request) {
-      const cooldown = await this.authService.resendEmail(req?.user?.id);
+      const cooldown = await this.authService.resendVerificationEmail(req?.user?.id);
       return { cooldown };
+   }
+
+   @Post('reset')
+   @HttpCode(HttpStatus.OK)
+   @Public()
+   @UseGuards(UnauthenticatedGuard)
+   async passwordReset(@Body() { email }: PasswordResetDTO, @Req() req: Request) {
+      const cooldown = await this.authService.resetPassword(email, req);
+      return { cooldown };
+   }
+
+   @Post('setup')
+   @HttpCode(HttpStatus.OK)
+   @Public()
+   @UseGuards(UnauthenticatedGuard)
+   async passwordSetup(@Body() { password, token }: PasswordUpdateDTO) {
+      await this.authService.setupPassword(token, password);
+      return true;
    }
 }

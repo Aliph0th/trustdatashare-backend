@@ -9,7 +9,6 @@ export class RegisterUserDTO {
 
    @IsString()
    @IsNotEmpty()
-   @Transform(({ value }) => value?.trim())
    @MinLength(MIN_PASSWORD_LENGTH)
    password: string;
 

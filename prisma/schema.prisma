@@ -53,6 +53,7 @@ model Data {
 
 enum TokenType {
    EMAIL_VERIFICATION
+   PASSWORD_RESET
 
    @@map("token_types")
 }

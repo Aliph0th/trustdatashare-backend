@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { SessionService } from '$/modules/session/session.service';
@@ -50,6 +50,17 @@ export class AuthenticatedGuard implements CanActivate {
       }
       if (!request.user?.isEmailVerified) {
          throw new UnauthorizedException('You must verify email first');
+      }
+      return true;
+   }
+}
+
+@Injectable()
+export class UnauthenticatedGuard implements CanActivate {
+   async canActivate(context: ExecutionContext) {
+      const request = context.switchToHttp().getRequest<Request>();
+      if (request.isAuthenticated()) {
+         throw new BadRequestException('You are already authenticated');
       }
       return true;
    }
