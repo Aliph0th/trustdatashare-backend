@@ -1,5 +1,4 @@
 import {
-   BadRequestException,
    ForbiddenException,
    Injectable,
    InternalServerErrorException,
@@ -116,10 +115,6 @@ export class DataService {
    }
 
    async patch(id: string, dto: UpdateDataDTO, userID?: number) {
-      if (Object.keys(dto).length === 0) {
-         throw new BadRequestException('You should specify at least one update');
-      }
-
       const data = await this.prisma.data.findFirst({
          where: { id },
          select: { id: true, createdAt: true, ttl: true, owner: { select: { id: true } } }

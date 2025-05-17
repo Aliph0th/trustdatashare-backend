@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsInt, IsOptional, Length, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsDefined, IsIn, IsInt, IsOptional, Length, Min, MinLength, ValidateIf } from 'class-validator';
 import { MAX_DATA_LENGTH, MIN_DATA_PASSWORD_LENGTH } from '#/constants';
 
 export class UpdateDataDTO {
@@ -27,4 +27,8 @@ export class UpdateDataDTO {
    @IsOptional()
    @MinLength(MIN_DATA_PASSWORD_LENGTH)
    password?: string;
+
+   @ValidateIf((o: UpdateDataDTO) => !o.content && !o.ttl && !o.title && !o.description && !o.hideOwner && !o.password)
+   @IsDefined({ message: 'At least one property must be provided to update' })
+   protected readonly atLeastOne: undefined;
 }

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '$/core/prisma/prisma.service';
 import { RedisService } from '$/core/redis/redis.service';
@@ -55,9 +55,6 @@ export class AccountService {
    }
 
    async patch(userID: number, dto: PatchUserDTO) {
-      if (Object.keys(dto).length === 0) {
-         throw new BadRequestException('You should specify at least one update');
-      }
       const { repeatedPassword: _, ...updates } = dto;
       if (updates.password) {
          updates.password = await bcrypt.hash(updates.password, USER_SALT_ROUNDS);
