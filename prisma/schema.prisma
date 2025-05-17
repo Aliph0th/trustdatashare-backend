@@ -42,7 +42,7 @@ model Data {
    owner         User?    @relation(fields: [ownerID], references: [id], onDelete: Cascade)
    ownerID       Int?     @map("owner_id")
    isOwnerHidden Boolean  @default(false) @map("owner_hidden")
-   title         String?  @db.VarChar(20)
+   title         String?  @db.VarChar(100)
    description   String?  @db.VarChar(500)
    password      String?
    createdAt     DateTime @default(now()) @map("created_at")

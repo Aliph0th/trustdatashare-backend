@@ -108,6 +108,13 @@ export class DataService {
    }
 
    async getUserPosts(page: number, limit: number, userID: number, visibleOnly = false) {
+      const user = await this.prisma.user.findUnique({
+         where: { id: userID },
+         select: { id: true }
+      });
+      if (!user) {
+         throw new NotFoundException();
+      }
       const userPosts = await this.prisma.$queryRawTyped(getPostsFromUser(userID, page * limit, limit, visibleOnly));
       const total = userPosts?.[0]?.total || 0;
       const hasMore = (page + 1) * limit < total;
