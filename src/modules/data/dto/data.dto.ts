@@ -1,4 +1,4 @@
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 
 export class DataDTO {
    id: string;
@@ -8,8 +8,13 @@ export class DataDTO {
    description?: string;
    createdAt: Date;
    updatedAt: Date;
+
+   @Transform(({ obj }) => !obj.password)
+   @Expose()
    isPublic?: boolean;
    isOwnerHidden?: boolean;
+
+   @Transform(({ obj, value }) => (obj.isOwnerHidden ? null : value))
    owner?: {
       id: number;
       username: string;

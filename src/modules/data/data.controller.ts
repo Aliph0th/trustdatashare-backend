@@ -48,8 +48,7 @@ export class DataController {
    @Cached({ threshold: 3, ttl: 5 * 60, userSensitive: false })
    async get(@Param() { id }: UuidDTO, @Req() req: Request, @Headers('Authorization') auth?: string) {
       const { data, content } = await this.dataService.getByID(id, req?.user?.id, auth);
-      const owner = data.isOwnerHidden ? null : data.owner;
-      return new DataDTO({ ...data, isPublic: !data.password, owner, content });
+      return new DataDTO({ ...data, content });
    }
 
    @Delete('/:id')
@@ -63,7 +62,6 @@ export class DataController {
    @Invalidate({ path: 'data/<id>', userSensitive: false })
    async patch(@Param() { id }: UuidDTO, @Body() dto: UpdateDataDTO, @Req() req: Request) {
       const { data, content } = await this.dataService.patch(id, dto, req.user?.id);
-      const owner = data.isOwnerHidden ? null : data.owner;
-      return new DataDTO({ ...data, isPublic: !data.password, owner, content });
+      return new DataDTO({ ...data, content });
    }
 }
