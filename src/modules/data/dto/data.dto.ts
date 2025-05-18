@@ -20,6 +20,8 @@ export class DataDTO {
       username: string;
    };
 
+   isYours: boolean;
+
    @Exclude()
    password?: string;
    @Exclude()

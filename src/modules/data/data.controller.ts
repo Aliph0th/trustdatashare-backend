@@ -48,13 +48,16 @@ export class DataController {
    @Cached({ threshold: 3, ttl: 5 * 60, userSensitive: false })
    async get(@Param() { id }: UuidDTO, @Req() req: Request, @Headers('Authorization') auth?: string) {
       const { data, content } = await this.dataService.getByID({ id, userID: req?.user?.id, authorization: auth });
-      return new DataDTO({ ...data, content });
+      const isYours = data.ownerID && data.ownerID === req.user.id;
+      return new DataDTO({ ...data, isYours, content });
    }
 
    @Get('/:id/edit')
+   @Cached({ threshold: 3, ttl: 1.5 * 60 })
    async getForEdit(@Param() { id }: UuidDTO, @Req() req: Request) {
       const { data, content } = await this.dataService.getByID({ id, userID: req.user.id, ownPost: true });
-      return new DataDTO({ ...data, content });
+      const isYours = data.ownerID && data.ownerID === req.user.id;
+      return new DataDTO({ ...data, isYours, content });
    }
 
    @Delete('/:id')
