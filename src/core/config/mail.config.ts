@@ -13,7 +13,7 @@ export function getMailerConfig(configService: ConfigService): MailerOptions {
          }
       },
       defaults: {
-         from: `"TrustDataShare" <noreply@aliph0th.ru>`
+         from: configService.getOrThrow('MAIL_FROM')
       }
    };
 }
