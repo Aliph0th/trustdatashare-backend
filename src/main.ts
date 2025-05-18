@@ -16,7 +16,7 @@ async function bootstrap() {
    const configService = app.get(ConfigService);
    const reflector = app.get(Reflector);
 
-   app.setGlobalPrefix('api');
+   app.setGlobalPrefix(configService.get('API_PREFIX') || '');
    app.enableVersioning({ type: VersioningType.URI, defaultVersion: configService.getOrThrow('ACTUAL_VERSION') });
    app.enableCors({ credentials: true, origin: configService.getOrThrow('ALLOWED_ORIGIN') });
    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, stopAtFirstError: true }));
