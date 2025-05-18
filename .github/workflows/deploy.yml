@@ -16,7 +16,9 @@ jobs:
 
       - name: Create .env file
         shell: bash
-        run: echo "${{ secrets.ENV_FILE }}" > .env
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+          echo "PORT=3333" > .env
 
       - name: Stop existing services
         shell: bash
