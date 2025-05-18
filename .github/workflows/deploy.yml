@@ -37,3 +37,8 @@ jobs:
       - name: Clean up dangling Docker images
         shell: bash
         run: docker image prune -f
+
+      - name: Remove .env file
+        shell: bash
+        run: rm .env
+        if: always()
