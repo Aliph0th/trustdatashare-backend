@@ -16,47 +16,7 @@ jobs:
 
       - name: Create .env file
         shell: bash
-        run: |
-          echo "TDS_IMAGE_TAG=${{ vars.TDS_IMAGE_TAG }}" > .env
-          echo "NODE_ENV=production" >> .env
-          echo "PORT=${{ secrets.PORT }}" >> .env
-          echo "ACTUAL_VERSION=${{ secrets.ACTUAL_VERSION }}" >> .env
-          echo "API_PREFIX=${{ secrets.API_PREFIX }}" >> .env
-          echo "ALLOWED_ORIGIN=${{ secrets.ALLOWED_ORIGIN }}" >> .env
-          echo "COOKIE_SECRET=${{ secrets.COOKIE_SECRET }}" >> .env
-          echo "SESSION_NAME=${{ secrets.SESSION_NAME }}" >> .env
-          echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> .env
-          echo "SESSION_MAX_AGE=${{ secrets.SESSION_MAX_AGE }}" >> .env
-          echo "SESSION_DOMAIN=${{ secrets.SESSION_DOMAIN }}" >> .env
-          echo "SESSION_SECURE=${{ secrets.SESSION_SECURE }}" >> .env
-          echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
-          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
-          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
-          echo "REDIS_DATABASE=${{ secrets.REDIS_DATABASE }}" >> .env
-          echo "REDIS_STORE_PREFIX=${{ secrets.REDIS_STORE_PREFIX }}" >> .env
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-          echo "POSTGRES_DATABASE=${{ secrets.POSTGRES_DATABASE }}" >> .env
-          echo "POSTGRES_URI=${{ secrets.POSTGRES_URI }}" >> .env
-          echo "MAIL_HOST=${{ secrets.MAIL_HOST }}" >> .env
-          echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> .env
-          echo "MAIL_LOGIN=${{ secrets.MAIL_LOGIN }}" >> .env
-          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
-          echo "MAIL_FROM=${{ secrets.MAIL_FROM }}" >> .env
-          echo "S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}" >> .env
-          echo "S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}" >> .env
-          echo "S3_HOST=${{ secrets.S3_HOST }}" >> .env
-          echo "S3_DATA_FOLDER=${{ secrets.S3_DATA_FOLDER }}" >> .env
-          echo "S3_AVATAR_FOLDER=${{ secrets.S3_AVATAR_FOLDER }}" >> .env
-          echo "S3_BUCKET=${{ secrets.S3_BUCKET }}" >> .env
-          echo "S3_REGION=${{ secrets.S3_REGION }}" >> .env
-          echo "S3_CDN=${{ secrets.S3_CDN }}" >> .env
-          echo "YC_PRIVATE_KEY='''${{ secrets.YC_PRIVATE_KEY }}'''" >> .env
-          echo "YC_IAM_TOKEN_HOST=${{ secrets.YC_IAM_TOKEN_HOST }}" >> .env
-          echo "YC_KMS_HOST=${{ secrets.YC_KMS_HOST }}" >> .env
-          echo "YC_KEY_ID=${{ secrets.YC_KEY_ID }}" >> .env
-          echo "YC_SA_ID=${{ secrets.YC_SA_ID }}" >> .env
-          echo "YC_PRIMARY_KEY_ID=${{ secrets.YC_PRIMARY_KEY_ID }}" >> .env
+        run: echo "${{ env.ENV_FILE }}" > .env
 
       - name: Stop existing services
         shell: bash
