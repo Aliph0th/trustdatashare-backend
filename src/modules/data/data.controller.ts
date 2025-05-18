@@ -62,6 +62,7 @@ export class DataController {
 
    @Delete('/:id')
    @Invalidate({ path: 'data/<id>', userSensitive: false })
+   @Invalidate({ path: 'data/<id>/edit' })
    async deleteData(@Param() { id }: UuidDTO, @Req() req: Request) {
       await this.dataService.delete(id, req.user.id);
       return true;
@@ -69,6 +70,7 @@ export class DataController {
 
    @Patch('/:id')
    @Invalidate({ path: 'data/<id>', userSensitive: false })
+   @Invalidate({ path: 'data/<id>/edit' })
    async patch(@Param() { id }: UuidDTO, @Body() dto: UpdateDataDTO, @Req() req: Request) {
       await this.dataService.patch(id, dto, req.user?.id);
       return true;
