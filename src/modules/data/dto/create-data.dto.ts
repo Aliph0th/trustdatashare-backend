@@ -21,7 +21,7 @@ export class CreateDataDTO {
 
    @IsOptional()
    @IsBoolean()
-   hideOwner?: boolean;
+   isOwnerHidden?: boolean;
 
    @IsOptional()
    @MinLength(MIN_DATA_PASSWORD_LENGTH)

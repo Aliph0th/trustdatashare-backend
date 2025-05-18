@@ -47,7 +47,13 @@ export class DataController {
    @Public()
    @Cached({ threshold: 3, ttl: 5 * 60, userSensitive: false })
    async get(@Param() { id }: UuidDTO, @Req() req: Request, @Headers('Authorization') auth?: string) {
-      const { data, content } = await this.dataService.getByID(id, req?.user?.id, auth);
+      const { data, content } = await this.dataService.getByID({ id, userID: req?.user?.id, authorization: auth });
+      return new DataDTO({ ...data, content });
+   }
+
+   @Get('/:id/edit')
+   async getForEdit(@Param() { id }: UuidDTO, @Req() req: Request) {
+      const { data, content } = await this.dataService.getByID({ id, userID: req.user.id, ownPost: true });
       return new DataDTO({ ...data, content });
    }
 
@@ -61,7 +67,7 @@ export class DataController {
    @Patch('/:id')
    @Invalidate({ path: 'data/<id>', userSensitive: false })
    async patch(@Param() { id }: UuidDTO, @Body() dto: UpdateDataDTO, @Req() req: Request) {
-      const { data, content } = await this.dataService.patch(id, dto, req.user?.id);
-      return new DataDTO({ ...data, content });
+      await this.dataService.patch(id, dto, req.user?.id);
+      return true;
    }
 }

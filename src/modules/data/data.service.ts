@@ -31,7 +31,7 @@ export class DataService {
       private readonly redis: RedisService
    ) {}
 
-   async create({ content, description, password, title, ttl, hideOwner }: CreateDataDTO, request?: Request) {
+   async create({ content, description, password, title, ttl, isOwnerHidden }: CreateDataDTO, request?: Request) {
       const userID = request?.user?.id;
       const fileID = randomUUID();
       const encrypted = await this.kmsService.encrypt(content, { fileID });
@@ -50,7 +50,7 @@ export class DataService {
          id: fileID,
          description,
          title,
-         isOwnerHidden: hideOwner,
+         isOwnerHidden,
          ttl: userID ? ttl : Math.min(ttl, MAX_GUEST_DATA_TTL)
       };
       if (userID) {
@@ -58,7 +58,7 @@ export class DataService {
 
          const prefix = `/api/v${this.configService.getOrThrow('ACTUAL_VERSION')}`;
          await this.redis.invalidate(`${prefix}/data/my|${userID}|`);
-         if (!hideOwner) {
+         if (!isOwnerHidden) {
             await this.redis.invalidate(`${prefix}/data/visible/${userID}`);
          }
       }
@@ -72,7 +72,17 @@ export class DataService {
       });
    }
 
-   async getByID(id: string, userID?: number, authorization?: string) {
+   async getByID({
+      id,
+      userID,
+      authorization,
+      ownPost
+   }: {
+      id: string;
+      userID?: number;
+      authorization?: string;
+      ownPost?: boolean;
+   }) {
       const data = await this.prisma.data.findUnique({
          where: { id },
          include: { owner: { select: { id: true, username: true } } }
@@ -82,6 +92,9 @@ export class DataService {
       const isExpired = new Date(data?.createdAt).getTime() + data?.ttl * 1000 < Date.now();
       if (!data || (data?.ttl > 0 && isExpired)) {
          throw new NotFoundException();
+      }
+      if (ownPost && data.ownerID !== userID) {
+         throw new ForbiddenException('You are not the owner of this post');
       }
       if (data.password && data.ownerID !== userID) {
          if (!prefix || !password) {
@@ -136,16 +149,30 @@ export class DataService {
       const { content, ...updates } = dto;
 
       if (content) {
-         await this.storageService.put(content, {
+         const encrypted = await this.kmsService.encrypt(content, { fileID: data.id });
+         await this.storageService.put(encrypted.ciphertext, {
             file: data.id,
             folder: this.configService.getOrThrow('S3_DATA_FOLDER')
          });
       }
 
+      if (updates.password) {
+         updates.password = await bcrypt.hash(updates.password, DATA_SALT_ROUNDS);
+      }
+
+      if (updates.ttl) {
+         const delta = new Date().getTime() - data.createdAt.getTime();
+         updates.ttl += delta / 1000;
+      }
+
+      const sanitizedUpdates = Object.fromEntries(
+         Object.entries(updates).map(([key, value]) => [key, value === '' ? null : value])
+      );
+
       const updated = await this.prisma.data.update({
          where: { id },
          data: {
-            ...updates,
+            ...sanitizedUpdates,
             updatedAt: new Date()
          },
          include: { owner: { select: { id: true, username: true } } }
@@ -166,6 +193,11 @@ export class DataService {
       if (data.owner.id !== userID) {
          throw new ForbiddenException();
       }
+
+      await this.storageService.delete({
+         file: data.id,
+         folder: this.configService.getOrThrow('S3_DATA_FOLDER')
+      });
 
       await this.prisma.data.delete({ where: { id } });
    }
