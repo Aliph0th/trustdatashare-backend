@@ -1,20 +1,24 @@
 version: '3.8'
-name: debugdev
+name: TDS
 services:
    pg:
       image: postgres:17
       restart: unless-stopped
       container_name: pg-db
+      network_mode: host
       environment:
          - POSTGRES_USER=${POSTGRES_USER}
          - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-         - POSTGRES_DATABASE=${POSTGRES_DATABASE}
+         - POSTGRES_DB=${POSTGRES_DATABASE}
       volumes:
          - pg_data:/var/lib/postgresql/data
       ports:
          - 5432:5432
-      networks:
-         - net
+      healthcheck:
+         test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}'"]
+         interval: 3s
+         timeout: 5s
+         retries: 20
    redis:
       image: redis:7.2.7-alpine
       container_name: redis
@@ -26,6 +30,26 @@ services:
          - redis_data:/data
       networks:
          - net
+
+   app:
+      build:
+         context: .
+         dockerfile: Dockerfile
+         network: host
+      container_name: tds-app
+      restart: unless-stopped
+      ports:
+         - "${PORT}:${PORT}"
+      env_file:
+         - .env
+      depends_on:
+         pg:
+            condition: service_healthy
+         redis:
+            condition: service_started
+      networks:
+         - net
+
 volumes:
    pg_data:
    redis_data:

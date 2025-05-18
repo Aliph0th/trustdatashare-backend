@@ -6,7 +6,8 @@ import { REDIS_KEYS } from '#/constants';
 @Injectable()
 export class RedisService extends Redis {
    constructor(private readonly configService: ConfigService) {
-      super(configService.getOrThrow('REDIS_URI'));
+      const url = `redis://${configService.get('REDIS_USER') || ''}:${configService.get('REDIS_PASSWORD') || ''}@${configService.getOrThrow('REDIS_HOST')}:${configService.getOrThrow('REDIS_PORT')}/${configService.getOrThrow('REDIS_DATABASE')}`;
+      super(url);
    }
 
    async requestCount(id: string) {

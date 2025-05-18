@@ -1,0 +1,11 @@
+Dockerfile
+.dockerignore
+node_modules
+dist
+.vscode
+.git
+.gitignore
+*.md
+.eslintrc.js
+.prettierrc
+docker-compose.yml

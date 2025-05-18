@@ -133,7 +133,8 @@
          "@prisma/engines",
          "esbuild",
          "prisma",
-         "sharp"
+         "sharp",
+         "bcrypt"
       ]
    }
 }
