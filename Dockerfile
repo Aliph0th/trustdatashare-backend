@@ -1,4 +1,5 @@
 FROM node:23-alpine
+ARG PORT
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -12,10 +13,13 @@ RUN pnpm approve-builds
 
 COPY --chown=node:node . .
 
+
 RUN npx prisma migrate deploy && \
     npx prisma generate && \
     npx prisma generate --sql && \
     pnpm run build
 USER node
+
+EXPOSE $PORT
 
 CMD ["pnpm", "run", "start:prod"]

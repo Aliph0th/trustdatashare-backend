@@ -35,10 +35,12 @@ services:
          context: .
          dockerfile: Dockerfile
          network: host
+         args:
+            - PORT=${PORT}
       container_name: tds-app
       restart: unless-stopped
       ports:
-         - "${PORT}:${PORT}"
+         - ${PORT}:${PORT}
       env_file:
          - .env
       depends_on:
