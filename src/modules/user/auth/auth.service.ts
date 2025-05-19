@@ -40,7 +40,7 @@ export class AuthService {
       }
       const hashedPassword = await bcrypt.hash(password, USER_SALT_ROUNDS);
 
-      let apiPrefix = this.configService.get('API_PREFIX');
+      let apiPrefix = this.configService.get('API_PREFIX') || '';
       if (apiPrefix && !apiPrefix.startsWith('/')) {
          apiPrefix = '/' + apiPrefix;
       }

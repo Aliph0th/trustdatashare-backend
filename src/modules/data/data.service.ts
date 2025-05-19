@@ -55,7 +55,7 @@ export class DataService {
       };
       if (userID) {
          instance.owner = { connect: { id: userID } };
-         let apiPrefix = this.configService.get('API_PREFIX');
+         let apiPrefix = this.configService.get('API_PREFIX') || '';
          if (apiPrefix && !apiPrefix.startsWith('/')) {
             apiPrefix = '/' + apiPrefix;
          }

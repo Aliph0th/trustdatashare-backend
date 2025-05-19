@@ -60,7 +60,7 @@ export class AccountService {
          updates.password = await bcrypt.hash(updates.password, USER_SALT_ROUNDS);
       }
       try {
-         let apiPrefix = this.configService.get('API_PREFIX');
+         let apiPrefix = this.configService.get('API_PREFIX') || '';
          if (apiPrefix && !apiPrefix.startsWith('/')) {
             apiPrefix = '/' + apiPrefix;
          }
@@ -120,7 +120,7 @@ export class AccountService {
       );
 
       await this.prisma.user.update({ where: { id: userID }, data: { avatar: fileID } });
-      let apiPrefix = this.configService.get('API_PREFIX');
+      let apiPrefix = this.configService.get('API_PREFIX') || '';
       if (apiPrefix && !apiPrefix.startsWith('/')) {
          apiPrefix = '/' + apiPrefix;
       }

@@ -30,7 +30,7 @@ export class InvalidateInterceptor implements NestInterceptor {
          pathname = pathname.replace(match[0], params[paramName]);
       }
 
-      let apiPrefix = this.configService.get('API_PREFIX');
+      let apiPrefix = this.configService.get('API_PREFIX') || '';
       if (apiPrefix && !apiPrefix.startsWith('/')) {
          apiPrefix = '/' + apiPrefix;
       }
