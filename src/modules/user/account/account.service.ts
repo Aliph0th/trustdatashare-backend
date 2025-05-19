@@ -60,7 +60,13 @@ export class AccountService {
          updates.password = await bcrypt.hash(updates.password, USER_SALT_ROUNDS);
       }
       try {
-         await this.redis.invalidate(`/api/v${this.configService.getOrThrow('ACTUAL_VERSION')}/users/${userID}`);
+         let apiPrefix = this.configService.getOrThrow('API_PREFIX');
+         if (apiPrefix && !apiPrefix.startsWith('/')) {
+            apiPrefix = '/' + apiPrefix;
+         }
+         await this.redis.invalidate(
+            `${apiPrefix}/v${this.configService.getOrThrow('ACTUAL_VERSION')}/users/${userID}`
+         );
          return await this.prisma.user.update({
             where: { id: userID },
             data: updates
@@ -114,7 +120,11 @@ export class AccountService {
       );
 
       await this.prisma.user.update({ where: { id: userID }, data: { avatar: fileID } });
-      await this.redis.invalidate(`/api/v${this.configService.getOrThrow('ACTUAL_VERSION')}/users/${userID}`);
+      let apiPrefix = this.configService.getOrThrow('API_PREFIX');
+      if (apiPrefix && !apiPrefix.startsWith('/')) {
+         apiPrefix = '/' + apiPrefix;
+      }
+      await this.redis.invalidate(`${apiPrefix}/v${this.configService.getOrThrow('ACTUAL_VERSION')}/users/${userID}`);
 
       return {
          url: new URL(

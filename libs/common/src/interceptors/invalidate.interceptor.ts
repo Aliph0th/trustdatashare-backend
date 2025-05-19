@@ -1,4 +1,5 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { RedisService } from '$/core/redis/redis.service';
 import type { Request } from 'express';
@@ -11,7 +12,8 @@ import { buildCacheKey } from '../utils';
 export class InvalidateInterceptor implements NestInterceptor {
    constructor(
       private readonly redis: RedisService,
-      private readonly reflector: Reflector
+      private readonly reflector: Reflector,
+      private readonly configService: ConfigService
    ) {}
 
    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
@@ -28,9 +30,13 @@ export class InvalidateInterceptor implements NestInterceptor {
          pathname = pathname.replace(match[0], params[paramName]);
       }
 
+      let apiPrefix = this.configService.getOrThrow('API_PREFIX');
+      if (apiPrefix && !apiPrefix.startsWith('/')) {
+         apiPrefix = '/' + apiPrefix;
+      }
       await this.redis.invalidate(
          buildCacheKey({
-            path: `/api/v${version}${pathname.startsWith('/') ? '' : '/'}${pathname}`,
+            path: `${apiPrefix}/v${version}${pathname.startsWith('/') ? '' : '/'}${pathname}`,
             userID: userSensitive ? user?.id : null,
             query,
             body

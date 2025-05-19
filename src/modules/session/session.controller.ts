@@ -17,7 +17,7 @@ export class SessionController {
 
    @Delete('/:id')
    @Invalidate({ path: 'sessions/me' })
-   async deleteSessions(@Param('id') { id }: UuidDTO, @Req() req: Request) {
+   async deleteSessions(@Param() { id }: UuidDTO, @Req() req: Request) {
       await this.sessionService.terminateSession(id, req);
       return true;
    }

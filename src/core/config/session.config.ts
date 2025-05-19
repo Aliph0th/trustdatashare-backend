@@ -7,7 +7,7 @@ export const getSessionConfig = (config: ConfigService, redis: RedisService): Se
    secret: config.getOrThrow('SESSION_SECRET'),
    cookie: {
       secure: !!config.get('SESSION_SECURE'),
-      sameSite: 'lax',
+      sameSite: config.getOrThrow('COOKIE_SAMESITE'),
       httpOnly: true,
       domain: config.getOrThrow('SESSION_DOMAIN'),
       maxAge: +config.getOrThrow('SESSION_MAX_AGE')

@@ -55,8 +55,11 @@ export class DataService {
       };
       if (userID) {
          instance.owner = { connect: { id: userID } };
-
-         const prefix = `/api/v${this.configService.getOrThrow('ACTUAL_VERSION')}`;
+         let apiPrefix = this.configService.getOrThrow('API_PREFIX');
+         if (apiPrefix && !apiPrefix.startsWith('/')) {
+            apiPrefix = '/' + apiPrefix;
+         }
+         const prefix = `${apiPrefix}/v${this.configService.getOrThrow('ACTUAL_VERSION')}`;
          await this.redis.invalidate(`${prefix}/data/my|${userID}|`);
          if (!isOwnerHidden) {
             await this.redis.invalidate(`${prefix}/data/visible/${userID}`);

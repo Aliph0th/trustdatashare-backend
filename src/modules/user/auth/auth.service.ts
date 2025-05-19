@@ -40,7 +40,11 @@ export class AuthService {
       }
       const hashedPassword = await bcrypt.hash(password, USER_SALT_ROUNDS);
 
-      const prefix = `/api/v${this.configService.getOrThrow('ACTUAL_VERSION')}`;
+      let apiPrefix = this.configService.getOrThrow('API_PREFIX');
+      if (apiPrefix && !apiPrefix.startsWith('/')) {
+         apiPrefix = '/' + apiPrefix;
+      }
+      const prefix = `${apiPrefix}/v${this.configService.getOrThrow('ACTUAL_VERSION')}`;
       await Promise.all([
          this.redis.invalidate(buildCacheKey({ path: `${prefix}/users/availability`, query: { email } })),
          this.redis.invalidate(buildCacheKey({ path: `${prefix}/users/availability`, query: { username } })),
