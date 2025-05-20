@@ -43,15 +43,12 @@ export class DataService {
          file: fileID,
          folder: this.configService.getOrThrow('S3_DATA_FOLDER')
       });
-      if (!userID && ttl === -1) {
-         ttl = MAX_GUEST_DATA_TTL;
-      }
       const instance: Prisma.DataCreateInput = {
          id: fileID,
          description,
          title,
          isOwnerHidden,
-         ttl: userID ? ttl : Math.min(ttl, MAX_GUEST_DATA_TTL)
+         ttl: userID ? ttl : Math.min(ttl || Infinity, MAX_GUEST_DATA_TTL)
       };
       if (userID) {
          instance.owner = { connect: { id: userID } };

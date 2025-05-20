@@ -1,5 +1,5 @@
 export const MAX_DATA_LENGTH = {
-   content: 6291456,
+   content: 32768,
    title: 100,
    description: 500
 };
