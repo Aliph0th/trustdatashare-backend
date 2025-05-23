@@ -30,7 +30,6 @@ export class TokenService {
          where: { token, type }
       });
       const isExpired = new Date(existingToken?.expires) < new Date();
-      console.log(!existingToken, isExpired, userID && existingToken?.userID !== userID);
       if (!existingToken || isExpired || (userID && existingToken?.userID !== userID)) {
          throw new NotFoundException('Token not found');
       }

@@ -43,6 +43,9 @@ export class DataService {
          file: fileID,
          folder: this.configService.getOrThrow('S3_DATA_FOLDER')
       });
+      if (!userID && ttl === -1) {
+         ttl = MAX_GUEST_DATA_TTL;
+      }
       const instance: Prisma.DataCreateInput = {
          id: fileID,
          description,

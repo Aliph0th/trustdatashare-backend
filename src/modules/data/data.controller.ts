@@ -45,7 +45,6 @@ export class DataController {
 
    @Get('/:id')
    @Public()
-   @Cached({ threshold: 3, ttl: 5 * 60, userSensitive: false })
    async get(@Param() { id }: UuidDTO, @Req() req: Request, @Headers('Authorization') auth?: string) {
       const { data, content } = await this.dataService.getByID({ id, userID: req?.user?.id, authorization: auth });
       const isYours = data.ownerID && data.ownerID === req?.user?.id;
